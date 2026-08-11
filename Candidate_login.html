@@ -295,6 +295,35 @@
     .register-footer a:hover {
       text-decoration: underline;
     }
+
+    .mobile-brand {
+      display: none;
+    }
+
+    @media (max-width: 860px) {
+      .left-brand-panel {
+        display: none;
+      }
+      .right-form-panel {
+        padding: 24px 16px;
+        flex-direction: column;
+      }
+      .mobile-brand {
+        display: flex;
+        justify-content: center;
+        margin-bottom: 20px;
+      }
+    }
+
+    @media (max-width: 480px) {
+      .login-container {
+        padding: 24px 20px;
+      }
+      .theme-toggle-btn {
+        top: 16px;
+        right: 16px;
+      }
+    }
   </style>
 </head>
 <body>
@@ -324,6 +353,10 @@
 
     <!-- Right Form Panel -->
     <div class="right-form-panel">
+      <div class="mobile-brand">
+        <img src="images/Altrium-logo-1.png" alt="Altrium logo" class="brand-logo-img for-light">
+        <img src="images/Altrium-logo-white.png" alt="Altrium logo" class="brand-logo-img for-dark">
+      </div>
       <div class="login-container">
         <h2>Welcome back</h2>
         <div class="subtitle">Sign in as <span>Candidate</span></div>

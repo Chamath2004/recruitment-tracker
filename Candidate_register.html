@@ -345,6 +345,55 @@
     .back-btn:hover {
       background: var(--overlay-hover);
     }
+
+    .mobile-brand {
+      display: none;
+    }
+
+    @media (max-width: 860px) {
+      .left-brand-panel {
+        display: none;
+      }
+      .right-form-panel {
+        padding: 24px 16px;
+        flex-direction: column;
+      }
+      .mobile-brand {
+        display: flex;
+        justify-content: center;
+        margin-bottom: 20px;
+      }
+    }
+
+    @media (max-width: 480px) {
+      .register-container {
+        padding: 24px 20px;
+      }
+      .theme-toggle-btn {
+        top: 16px;
+        right: 16px;
+      }
+      .form-grid {
+        grid-template-columns: 1fr;
+      }
+      .form-group.full {
+        grid-column: span 1;
+      }
+      .stepper {
+        align-items: flex-start;
+      }
+      .step-desc {
+        display: none;
+      }
+      .step-divider {
+        margin: 0 8px;
+        align-self: center;
+      }
+      .btn-container {
+        flex-wrap: wrap;
+        gap: 10px;
+      }
+    }
   </style>
 </head>
 <body>
@@ -370,6 +419,10 @@
     </div>
 
     <div class="right-form-panel">
+      <div class="mobile-brand">
+        <img src="images/Altrium-logo-1.png" alt="Altrium logo" class="brand-logo-img for-light">
+        <img src="images/Altrium-logo-white.png" alt="Altrium logo" class="brand-logo-img for-dark">
+      </div>
       <div class="register-container">
         <a href="Candidate_login.html" class="back-link">&larr; Back to login</a>
 

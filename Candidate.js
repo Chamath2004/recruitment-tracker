@@ -92,6 +92,9 @@ function selectJob(id) {
   renderJobs();
 
   jobDetailPanel.innerHTML = `
+    <button class="back-to-jobs-btn" onclick="closeJobDetail()">
+      <i data-lucide="arrow-left"></i> Back to jobs
+    </button>
     <div class="detail-header">
       <div class="detail-icon-box">
         <i data-lucide="briefcase"></i>
@@ -132,6 +135,14 @@ function selectJob(id) {
 
   jobDetailPanel.classList.add("active");
   lucide.createIcons();
+}
+
+// Return to the jobs list on mobile, where the detail panel replaces the list
+function closeJobDetail() {
+  selectedJobId = null;
+  jobDetailPanel.classList.remove("active");
+  jobDetailPanel.innerHTML = "";
+  renderJobs();
 }
 
 // Open Application View
