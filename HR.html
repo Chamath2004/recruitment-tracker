@@ -1,0 +1,259 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>TalentFlow - HR Dashboard</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <script src="https://unpkg.com/lucide@latest"></script>
+  <script>
+    document.documentElement.setAttribute('data-theme', localStorage.getItem('theme') || 'dark');
+  </script>
+  <link rel="stylesheet" href="Candidate.css">
+  <link rel="stylesheet" href="hr.css">
+</head>
+
+<body>
+  <button class="theme-toggle-btn" onclick="toggleTheme()" title="Toggle theme">
+    <i id="theme-toggle-icon" data-lucide="sun"></i>
+  </button>
+
+  <div class="app-container">
+    <!-- Sidebar -->
+    <aside class="sidebar">
+      <div class="sidebar-top">
+        <div class="brand">
+          <img src="images/Altrium-logo-1.png" alt="Altrium logo" class="brand-logo-img for-light">
+          <img src="images/Altrium-logo-white.png" alt="Altrium logo" class="brand-logo-img for-dark">
+          <span class="brand-label">HR Administrator</span>
+        </div>
+
+        <nav class="nav-menu">
+          <a href="#" class="nav-item active" id="nav-overview" onclick="switchHrView(this, 'overview', 'Overview')">
+            <i data-lucide="layout-dashboard"></i>
+            <span>Overview</span>
+          </a>
+          <a href="#" class="nav-item" id="nav-vacancies" onclick="switchHrView(this, 'vacancies', 'Vacancy Management')">
+            <i data-lucide="briefcase"></i>
+            <span>Vacancy Management</span>
+          </a>
+          <a href="#" class="nav-item" id="nav-workflows" onclick="switchHrView(this, 'workflows', 'Hiring Workflows')">
+            <i data-lucide="clipboard-list"></i>
+            <span>Hiring Workflows</span>
+          </a>
+          <a href="#" class="nav-item" id="nav-interviews" onclick="switchHrView(this, 'interviews', 'Interview Setup')">
+            <i data-lucide="calendar"></i>
+            <span>Interview Setup</span>
+          </a>
+          <a href="#" class="nav-item" id="nav-access" onclick="switchHrView(this, 'placeholder', 'Access Control')">
+            <i data-lucide="shield"></i>
+            <span>Access Control</span>
+          </a>
+          <a href="#" class="nav-item" id="nav-feedback" onclick="switchHrView(this, 'placeholder', 'Pending Feedback')">
+            <i data-lucide="bell"></i>
+            <span>Pending Feedback</span>
+          </a>
+          <a href="#" class="nav-item" id="nav-settings" onclick="switchHrView(this, 'placeholder', 'Settings')">
+            <i data-lucide="settings"></i>
+            <span>Settings</span>
+          </a>
+        </nav>
+      </div>
+
+      <div class="sidebar-bottom">
+        <div class="user-profile">
+          <div class="avatar" id="sidebar-avatar">--</div>
+          <div class="user-info">
+            <span class="name" id="sidebar-name">Loading…</span>
+            <span class="email" id="sidebar-email"></span>
+          </div>
+        </div>
+        <button class="sign-out-btn" onclick="window.location.href='logout.php?role=hr'">
+          <i data-lucide="log-out"></i>
+          <span>Sign Out</span>
+        </button>
+        <button class="collapse-btn">
+          <i data-lucide="chevron-left"></i>
+          <span>Collapse</span>
+        </button>
+      </div>
+    </aside>
+
+    <!-- Main Content -->
+    <main class="main-content">
+      <div id="overview-view">
+        <header class="header">
+          <h1>Dashboard Overview</h1>
+          <p>Track your recruiting pipeline at a glance</p>
+        </header>
+
+        <div class="metric-grid" id="metric-grid"></div>
+
+        <div class="panel-grid">
+          <div class="panel-card" style="margin-bottom: 0;">
+            <div class="panel-header">
+              <h3>Recent Applicants</h3>
+            </div>
+            <div class="panel-list" id="recent-applicants-list"></div>
+          </div>
+
+          <div class="panel-card" style="margin-bottom: 0;">
+            <div class="panel-header">
+              <h3>Upcoming Interviews</h3>
+            </div>
+            <div class="panel-list" id="upcoming-interviews-list">
+              <div class="panel-empty">Interview scheduling isn't set up yet.</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="panel-card">
+          <div class="panel-header">
+            <h3>Active Vacancies</h3>
+          </div>
+          <div class="table-wrap">
+            <table class="data-table">
+              <thead>
+                <tr>
+                  <th>Position</th>
+                  <th>Department</th>
+                  <th>Applicants</th>
+                  <th>Status</th>
+                </tr>
+              </thead>
+              <tbody id="vacancies-table-body"></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <div id="vacancies-view" style="display: none;">
+        <div class="view-header-row">
+          <div>
+            <h1 style="font-size: 24px; font-weight: 700; margin-bottom: 4px;">Vacancy Management</h1>
+            <p style="font-size: 14px; color: var(--text-muted);">Create, update, and close job vacancies</p>
+          </div>
+          <button class="new-vacancy-btn" onclick="openVacancyModal()">
+            <i data-lucide="plus"></i> New Vacancy
+          </button>
+        </div>
+
+        <div class="vacancy-toolbar">
+          <div class="vacancy-search-wrapper">
+            <i data-lucide="search"></i>
+            <input type="text" id="vacancy-search-input" placeholder="Search vacancies..." oninput="renderVacancyGrid()">
+          </div>
+          <div class="filter-pills" id="vacancy-filter-pills">
+            <button class="filter-pill active" data-status="all" onclick="setVacancyFilter('all')">All</button>
+            <button class="filter-pill" data-status="active" onclick="setVacancyFilter('active')">Active</button>
+            <button class="filter-pill" data-status="closed" onclick="setVacancyFilter('closed')">Closed</button>
+            <button class="filter-pill" data-status="draft" onclick="setVacancyFilter('draft')">Draft</button>
+          </div>
+        </div>
+
+        <div class="vacancy-grid" id="vacancy-grid"></div>
+      </div>
+
+      <div id="workflows-view" style="display: none;">
+        <header class="header">
+          <h1>Hiring Workflows</h1>
+          <p>Configure hiring stages and automation for each vacancy</p>
+        </header>
+
+        <div class="panel-card">
+          <div class="workflow-card-header">
+            <div class="workflow-card-title">
+              <i data-lucide="clipboard-list"></i>
+              <h3>Default Pipeline Stages</h3>
+            </div>
+            <span class="workflow-card-hint">Used as the starting template for new vacancies</span>
+          </div>
+          <div class="stage-list" id="stage-list"></div>
+          <div class="stage-add-row">
+            <input type="text" id="new-stage-input" placeholder="Add new stage..." onkeydown="if(event.key==='Enter') addStage()">
+            <button class="stage-add-btn" onclick="addStage()"><i data-lucide="plus"></i> Add</button>
+          </div>
+        </div>
+
+        <div class="panel-card">
+          <div class="workflow-card-header">
+            <h3>Stage Automation</h3>
+          </div>
+          <div class="automation-list" id="automation-list"></div>
+        </div>
+
+        <div class="panel-card">
+          <div class="workflow-card-header">
+            <h3>Active Vacancy Workflows</h3>
+          </div>
+          <div class="workflow-vacancy-list" id="workflow-vacancy-list"></div>
+        </div>
+      </div>
+
+      <div id="interviews-view" style="display: none;">
+        <div class="view-header-row">
+          <div>
+            <h1 style="font-size: 24px; font-weight: 700; margin-bottom: 4px;">Interview Setup</h1>
+            <p style="font-size: 14px; color: var(--text-muted);">Schedule and manage candidate interviews</p>
+          </div>
+          <button class="new-vacancy-btn" onclick="openInterviewModal()">
+            <i data-lucide="plus"></i> Schedule Interview
+          </button>
+        </div>
+
+        <div class="vacancy-toolbar">
+          <div class="vacancy-search-wrapper">
+            <i data-lucide="search"></i>
+            <input type="text" id="interview-search-input" placeholder="Search by candidate or position..." oninput="renderInterviewList()">
+          </div>
+          <div class="filter-pills" id="interview-filter-pills">
+            <button class="filter-pill active" data-status="all" onclick="setInterviewFilter('all')">All</button>
+            <button class="filter-pill" data-status="scheduled" onclick="setInterviewFilter('scheduled')">Scheduled</button>
+            <button class="filter-pill" data-status="completed" onclick="setInterviewFilter('completed')">Completed</button>
+            <button class="filter-pill" data-status="cancelled" onclick="setInterviewFilter('cancelled')">Cancelled</button>
+          </div>
+        </div>
+
+        <div class="panel-card">
+          <div class="table-wrap">
+            <table class="data-table">
+              <thead>
+                <tr>
+                  <th>Candidate</th>
+                  <th>Position</th>
+                  <th>Type</th>
+                  <th>Date &amp; Time</th>
+                  <th>Interviewer</th>
+                  <th>Mode</th>
+                  <th>Status</th>
+                  <th></th>
+                </tr>
+              </thead>
+              <tbody id="interviews-table-body"></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <div id="placeholder-view" style="display: none;">
+        <header class="header">
+          <h1 id="placeholder-title">Section</h1>
+          <p>This section is coming soon</p>
+        </header>
+        <div class="panel-card">
+          <div class="panel-empty" style="padding: 60px 20px;">Nothing to show here yet — check back soon.</div>
+        </div>
+      </div>
+    </main>
+  </div>
+
+  <div id="modal-root"></div>
+
+  <script src="theme.js"></script>
+  <script src="hr.js"></script>
+</body>
+
+</html>
