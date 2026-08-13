@@ -261,6 +261,169 @@
   color: var(--badge-green-text);
 }
 
+/* ================= PENDING FEEDBACK ================= */
+.feedback-stars {
+  color: var(--warning-text);
+  font-size: 14px;
+  letter-spacing: 1px;
+}
+
+.feedback-add-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background-color: var(--primary-green);
+  color: white;
+  border: none;
+  border-radius: 8px;
+  padding: 7px 14px;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.feedback-add-btn:hover {
+  background-color: var(--primary-green-hover);
+}
+
+.feedback-add-btn svg {
+  width: 14px;
+  height: 14px;
+}
+
+.star-rating-picker {
+  display: flex;
+  gap: 4px;
+}
+
+.star-rating-picker button {
+  background: none;
+  border: none;
+  padding: 4px;
+  cursor: pointer;
+  color: var(--border-color);
+  display: flex;
+}
+
+.star-rating-picker button svg {
+  width: 24px;
+  height: 24px;
+}
+
+.star-rating-picker button.filled {
+  color: var(--warning-text);
+}
+
+.star-rating-picker button.filled svg {
+  fill: currentColor;
+}
+
+/* ================= GOOGLE CALENDAR STATUS ================= */
+.google-status-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 12px 16px;
+  border-radius: 10px;
+  margin-bottom: 16px;
+  font-size: 13px;
+}
+
+.google-status-bar.connected {
+  background-color: var(--badge-green-bg);
+  color: var(--badge-green-text);
+}
+
+.google-status-bar.disconnected {
+  background-color: var(--warning-bg);
+  color: var(--warning-text);
+}
+
+.google-status-bar-info {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-weight: 500;
+}
+
+.google-status-bar-info svg {
+  width: 16px;
+  height: 16px;
+}
+
+.google-connect-btn,
+.google-disconnect-btn {
+  border: none;
+  border-radius: 8px;
+  padding: 7px 14px;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.google-connect-btn {
+  background-color: var(--primary-green);
+  color: white;
+}
+
+.google-connect-btn:hover {
+  background-color: var(--primary-green-hover);
+}
+
+.google-disconnect-btn {
+  background: none;
+  color: inherit;
+  text-decoration: underline;
+  opacity: 0.8;
+}
+
+.google-disconnect-btn:hover {
+  opacity: 1;
+}
+
+.meet-link-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  color: var(--primary-green);
+  font-size: 12px;
+  font-weight: 600;
+  text-decoration: none;
+  margin-top: 2px;
+}
+
+.meet-link-btn:hover {
+  text-decoration: underline;
+}
+
+.meet-link-btn svg {
+  width: 12px;
+  height: 12px;
+}
+
+/* ================= ACCESS CONTROL ================= */
+.role-badge {
+  font-size: 10px;
+  font-weight: 600;
+  padding: 4px 9px;
+  border-radius: 999px;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+}
+
+.role-badge.admin {
+  background-color: var(--purple-tint-bg);
+  color: var(--purple-tint-text);
+}
+
+.role-badge.recruiter {
+  background-color: var(--badge-blue-bg);
+  color: var(--badge-blue-text);
+}
+
 /* ================= HIRING WORKFLOWS ================= */
 .panel-card > .workflow-card-header,
 .panel-card > .stage-list,

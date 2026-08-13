@@ -59,11 +59,11 @@
             <i data-lucide="calendar"></i>
             <span>Interview Setup</span>
           </a>
-          <a href="#" class="nav-item" id="nav-access" onclick="switchHrView(this, 'placeholder', 'Access Control')">
+          <a href="#" class="nav-item" id="nav-access" onclick="switchHrView(this, 'access', 'Access Control')" style="display: none;">
             <i data-lucide="shield"></i>
             <span>Access Control</span>
           </a>
-          <a href="#" class="nav-item" id="nav-feedback" onclick="switchHrView(this, 'placeholder', 'Pending Feedback')">
+          <a href="#" class="nav-item" id="nav-feedback" onclick="switchHrView(this, 'feedback', 'Pending Feedback')">
             <i data-lucide="bell"></i>
             <span>Pending Feedback</span>
           </a>
@@ -215,6 +215,8 @@
           </button>
         </div>
 
+        <div class="google-status-bar" id="google-status-bar"></div>
+
         <div class="vacancy-toolbar">
           <div class="vacancy-search-wrapper">
             <i data-lucide="search"></i>
@@ -244,6 +246,69 @@
                 </tr>
               </thead>
               <tbody id="interviews-table-body"></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <div id="access-view" style="display: none;">
+        <div class="view-header-row">
+          <div>
+            <h1 style="font-size: 24px; font-weight: 700; margin-bottom: 4px;">Access Control</h1>
+            <p style="font-size: 14px; color: var(--text-muted);">Manage who can sign in to the HR dashboard</p>
+          </div>
+          <button class="new-vacancy-btn" onclick="openHrAdminModal()">
+            <i data-lucide="user-plus"></i> Add HR User
+          </button>
+        </div>
+
+        <div class="panel-card">
+          <div class="table-wrap">
+            <table class="data-table">
+              <thead>
+                <tr>
+                  <th>Name</th>
+                  <th>Email</th>
+                  <th>Department</th>
+                  <th>Role</th>
+                  <th></th>
+                </tr>
+              </thead>
+              <tbody id="hr-admins-table-body"></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <div id="feedback-view" style="display: none;">
+        <header class="header">
+          <h1>Pending Feedback</h1>
+          <p>Review completed interviews and record hiring feedback</p>
+        </header>
+
+        <div class="vacancy-toolbar">
+          <div class="filter-pills" id="feedback-filter-pills">
+            <button class="filter-pill active" data-status="pending" onclick="setFeedbackFilter('pending')">Pending</button>
+            <button class="filter-pill" data-status="submitted" onclick="setFeedbackFilter('submitted')">Submitted</button>
+            <button class="filter-pill" data-status="all" onclick="setFeedbackFilter('all')">All</button>
+          </div>
+        </div>
+
+        <div class="panel-card">
+          <div class="table-wrap">
+            <table class="data-table">
+              <thead>
+                <tr>
+                  <th>Candidate</th>
+                  <th>Position</th>
+                  <th>Interview</th>
+                  <th>Completed</th>
+                  <th>Interviewer</th>
+                  <th>Feedback</th>
+                  <th></th>
+                </tr>
+              </thead>
+              <tbody id="feedback-table-body"></tbody>
             </table>
           </div>
         </div>

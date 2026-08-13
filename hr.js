@@ -12,6 +12,8 @@ function getInitials(name) {
 
 // ================= SESSION / PROFILE =================
 
+let currentHrAdmin = null;
+
 function loadHrProfile() {
   fetch('get_hr_profile.php')
     .then(response => response.json())
@@ -21,10 +23,16 @@ function loadHrProfile() {
         return;
       }
       const a = result.data;
+      currentHrAdmin = a;
       const fullName = `${a.first_name} ${a.last_name}`.trim();
       document.getElementById('sidebar-avatar').textContent = getInitials(fullName) || "?";
       document.getElementById('sidebar-name').textContent = fullName;
       document.getElementById('sidebar-email').textContent = a.email;
+
+      const accessNav = document.getElementById('nav-access');
+      if (a.role === 'admin') {
+        accessNav.style.display = '';
+      }
     })
     .catch(error => console.error('Error loading HR profile:', error));
 }
@@ -41,6 +49,8 @@ function switchHrView(navEl, view, label) {
   document.getElementById('vacancies-view').style.display = view === 'vacancies' ? 'block' : 'none';
   document.getElementById('workflows-view').style.display = view === 'workflows' ? 'block' : 'none';
   document.getElementById('interviews-view').style.display = view === 'interviews' ? 'block' : 'none';
+  document.getElementById('access-view').style.display = view === 'access' ? 'block' : 'none';
+  document.getElementById('feedback-view').style.display = view === 'feedback' ? 'block' : 'none';
   document.getElementById('placeholder-view').style.display = view === 'placeholder' ? 'block' : 'none';
 
   if (view === 'placeholder') {
@@ -51,6 +61,10 @@ function switchHrView(navEl, view, label) {
     loadHiringWorkflows();
   } else if (view === 'interviews') {
     loadInterviews();
+  } else if (view === 'access') {
+    loadHrAdmins();
+  } else if (view === 'feedback') {
+    loadFeedback();
   }
 }
 
@@ -627,7 +641,66 @@ function loadInterviews() {
     if (applicationsResult.success) applicationPickerList = applicationsResult.data;
     renderInterviewList();
   }).catch(error => console.error('Error loading interviews:', error));
+
+  loadGoogleStatus();
 }
+
+// ================= GOOGLE CALENDAR CONNECTION =================
+
+function loadGoogleStatus() {
+  fetch('get_google_status.php')
+    .then(response => response.json())
+    .then(result => {
+      if (!result.success) return;
+      renderGoogleStatusBar(result.connected, result.email);
+    })
+    .catch(error => console.error('Error loading Google status:', error));
+}
+
+function renderGoogleStatusBar(connected, email) {
+  const bar = document.getElementById('google-status-bar');
+  if (!bar) return;
+
+  bar.className = `google-status-bar ${connected ? 'connected' : 'disconnected'}`;
+
+  if (connected) {
+    bar.innerHTML = `
+      <div class="google-status-bar-info"><i data-lucide="check-circle"></i> Google Calendar connected — ${email}</div>
+      <button class="google-disconnect-btn" onclick="disconnectGoogleCalendar()">Disconnect</button>
+    `;
+  } else {
+    bar.innerHTML = `
+      <div class="google-status-bar-info"><i data-lucide="alert-circle"></i> Connect Google Calendar to auto-generate Meet links</div>
+      <button class="google-connect-btn" onclick="window.location.href='google_oauth_start.php'">Connect Google Calendar</button>
+    `;
+  }
+
+  lucide.createIcons();
+}
+
+function disconnectGoogleCalendar() {
+  fetch('google_disconnect.php', { method: 'POST' })
+    .then(response => response.json())
+    .then(() => loadGoogleStatus())
+    .catch(error => console.error('Error disconnecting Google Calendar:', error));
+}
+
+(function handleGoogleOauthRedirect() {
+  const params = new URLSearchParams(window.location.search);
+  const status = params.get('google');
+  if (!status) return;
+
+  if (status === 'connected') {
+    switchHrView(document.getElementById('nav-interviews'), 'interviews', 'Interview Setup');
+  } else if (status === 'error') {
+    alert('Could not connect Google Calendar. Please try again.');
+  }
+
+  params.delete('google');
+  const newSearch = params.toString();
+  const newUrl = window.location.pathname + (newSearch ? `?${newSearch}` : '') + window.location.hash;
+  window.history.replaceState({}, '', newUrl);
+})();
 
 function setInterviewFilter(status) {
   interviewFilter = status;
@@ -670,7 +743,16 @@ function renderInterviewList() {
       <td>${iv.interview_type}</td>
       <td>${formatInterviewDateTime(iv.interview_date, iv.interview_time)}<div class="cell-sub">${iv.duration_minutes} min</div></td>
       <td>${iv.interviewer || '—'}</td>
-      <td>${interviewModeLabel(iv.mode)}</td>
+      <td>
+        ${interviewModeLabel(iv.mode)}
+        ${iv.mode === 'video' && /^https?:\/\//i.test(iv.meeting_link || '') ? `
+          <div>
+            <a class="meet-link-btn" href="${iv.meeting_link}" target="_blank" rel="noopener noreferrer">
+              <i data-lucide="video"></i> Meet
+            </a>
+          </div>
+        ` : ''}
+      </td>
       <td><span class="stage-pill ${interviewStatusPillClass(iv.status)}">${iv.status.charAt(0).toUpperCase() + iv.status.slice(1)}</span></td>
       <td>
         <div class="vacancy-card-actions">
@@ -755,9 +837,9 @@ function openInterviewModal(id) {
           </div>
           <div class="form-group">
             <label>Meeting Link / Location</label>
-            <input type="text" id="if-link" data-auto="${interview && interview.meeting_link ? 'false' : 'true'}" oninput="this.dataset.auto='false'" value="${interview ? interview.meeting_link || '' : ''}" placeholder="Enter an office address, or generate a video call link">
+            <input type="text" id="if-link" data-auto="${interview && interview.meeting_link ? 'false' : 'true'}" oninput="this.dataset.auto='false'" value="${interview ? interview.meeting_link || '' : ''}" placeholder="Enter an office address, or generate a Google Meet link">
             <button type="button" class="link-generate-btn" onclick="autoFillMeetingLink(true)">
-              <i data-lucide="link"></i> Generate Link
+              <i data-lucide="video"></i> Generate Meet Link
             </button>
           </div>
           <div class="form-group">
@@ -802,14 +884,49 @@ function autoFillMeetingLink(force) {
     candidateName = candidateInput ? candidateInput.value.split('—')[0].trim() : '';
   }
 
-  const slug = [candidateName, dateEl.value, timeEl.value.replace(':', '')]
-    .filter(Boolean)
-    .join('-')
-    .replace(/[^a-zA-Z0-9-]+/g, '');
+  const typeEl = document.getElementById('if-type');
+  const durationEl = document.getElementById('if-duration');
+  const generateBtn = document.querySelector('#interview-modal-overlay .link-generate-btn');
 
-  const randomSuffix = Math.random().toString(36).substring(2, 8);
-  linkEl.value = `https://meet.jit.si/${slug ? slug + '-' : ''}${randomSuffix}`;
-  linkEl.dataset.auto = 'true';
+  if (generateBtn) {
+    generateBtn.disabled = true;
+    generateBtn.innerHTML = 'Generating…';
+  }
+
+  fetch('generate_meet_link.php', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      interview_date: dateEl.value,
+      interview_time: timeEl.value,
+      duration_minutes: parseInt(durationEl.value, 10) || 30,
+      interview_type: (typeEl.value || '').trim() || 'Interview',
+      candidate_name: candidateName
+    })
+  })
+    .then(response => response.json())
+    .then(result => {
+      if (!result.success) {
+        if (result.not_connected) {
+          if (force && confirm('Connect your Google Calendar to generate Meet links. Connect now?')) {
+            window.location.href = 'google_oauth_start.php';
+          }
+        } else if (force) {
+          alert(result.message || 'Failed to generate the Meet link.');
+        }
+        return;
+      }
+      linkEl.value = result.meet_link;
+      linkEl.dataset.auto = 'true';
+    })
+    .catch(error => console.error('Error generating meet link:', error))
+    .finally(() => {
+      if (generateBtn) {
+        generateBtn.disabled = false;
+        generateBtn.innerHTML = '<i data-lucide="video"></i> Generate Meet Link';
+        lucide.createIcons();
+      }
+    });
 }
 
 function closeInterviewModal() {
@@ -898,6 +1015,390 @@ function runInterviewStatusChange(id, status) {
       loadHrDashboardStats();
     })
     .catch(error => console.error('Error updating interview status:', error));
+}
+
+// ================= PENDING FEEDBACK =================
+
+let feedbackList = [];
+let feedbackFilter = 'pending';
+let feedbackRatingValue = 0;
+let feedbackRecommendationValue = '';
+
+function loadFeedback() {
+  fetch('get_interview_feedback.php')
+    .then(response => response.json())
+    .then(result => {
+      if (!result.success) return;
+      feedbackList = result.data;
+      renderFeedbackTable();
+    })
+    .catch(error => console.error('Error loading feedback:', error));
+}
+
+function setFeedbackFilter(status) {
+  feedbackFilter = status;
+  document.querySelectorAll('#feedback-filter-pills .filter-pill').forEach(btn => {
+    btn.classList.toggle('active', btn.dataset.status === status);
+  });
+  renderFeedbackTable();
+}
+
+function recommendationLabel(rec) {
+  const map = { strong_yes: 'Strong Yes', yes: 'Yes', no: 'No', strong_no: 'Strong No' };
+  return map[rec] || rec;
+}
+
+function recommendationPillClass(rec) {
+  const map = { strong_yes: 'offer', yes: 'in-review', no: 'rejected', strong_no: 'rejected' };
+  return map[rec] || 'submitted';
+}
+
+function starDisplay(rating) {
+  return '★'.repeat(rating) + '☆'.repeat(5 - rating);
+}
+
+function renderFeedbackTable() {
+  const tbody = document.getElementById('feedback-table-body');
+  if (!tbody) return;
+
+  const filtered = feedbackList.filter(iv => {
+    if (feedbackFilter === 'pending') return !iv.feedback_id;
+    if (feedbackFilter === 'submitted') return !!iv.feedback_id;
+    return true;
+  });
+
+  if (filtered.length === 0) {
+    const emptyMessage = feedbackFilter === 'pending'
+      ? "No completed interviews are waiting on feedback."
+      : feedbackFilter === 'submitted'
+        ? "No feedback has been submitted yet."
+        : "No completed interviews yet.";
+    tbody.innerHTML = `<tr><td colspan="7" class="panel-empty">${emptyMessage}</td></tr>`;
+    return;
+  }
+
+  tbody.innerHTML = filtered.map(iv => `
+    <tr>
+      <td>${iv.candidate_name}</td>
+      <td>${iv.job_title}</td>
+      <td>${iv.interview_type}</td>
+      <td>${formatInterviewDateTime(iv.interview_date, iv.interview_time)}</td>
+      <td>${iv.interviewer || '—'}</td>
+      <td>
+        ${iv.feedback_id ? `
+          <span class="feedback-stars">${starDisplay(iv.rating)}</span>
+          <div><span class="stage-pill ${recommendationPillClass(iv.recommendation)}">${recommendationLabel(iv.recommendation)}</span></div>
+        ` : `<span class="panel-empty" style="padding: 0; font-size: 12px;">Awaiting feedback</span>`}
+      </td>
+      <td>
+        ${iv.feedback_id ? `
+          <div class="vacancy-card-actions">
+            <button title="Edit feedback" onclick="openFeedbackModal(${iv.id})"><i data-lucide="edit-3"></i></button>
+          </div>
+        ` : `
+          <button class="feedback-add-btn" onclick="openFeedbackModal(${iv.id})">
+            <i data-lucide="message-square-plus"></i> Add Feedback
+          </button>
+        `}
+      </td>
+    </tr>
+  `).join('');
+
+  lucide.createIcons();
+}
+
+function openFeedbackModal(interviewId) {
+  const iv = feedbackList.find(item => Number(item.id) === Number(interviewId));
+  if (!iv) return;
+
+  feedbackRatingValue = iv.rating || 0;
+  feedbackRecommendationValue = iv.recommendation || '';
+
+  const recommendationOptions = [
+    { value: 'strong_yes', label: 'Strong Yes' },
+    { value: 'yes', label: 'Yes' },
+    { value: 'no', label: 'No' },
+    { value: 'strong_no', label: 'Strong No' }
+  ];
+
+  const modalHtml = `
+    <div class="modal-overlay" id="feedback-modal-overlay" onclick="if(event.target===this) closeFeedbackModal()">
+      <div class="modal-dialog">
+        <div class="modal-header">
+          <h2>${iv.feedback_id ? 'Edit Feedback' : 'Add Feedback'}</h2>
+          <button class="modal-close-btn" onclick="closeFeedbackModal()"><i data-lucide="x"></i></button>
+        </div>
+        <div class="modal-body">
+          <div class="form-group">
+            <label>${iv.candidate_name} — ${iv.job_title}</label>
+            <p class="workflow-card-hint">${iv.interview_type} · ${formatInterviewDateTime(iv.interview_date, iv.interview_time)}</p>
+          </div>
+          <div class="form-group">
+            <label>Rating *</label>
+            <div class="star-rating-picker" id="fb-rating-picker">
+              ${[1, 2, 3, 4, 5].map(n => `
+                <button type="button" class="${n <= feedbackRatingValue ? 'filled' : ''}" data-star="${n}" onclick="setFeedbackRating(${n})">
+                  <i data-lucide="star"></i>
+                </button>
+              `).join('')}
+            </div>
+          </div>
+          <div class="form-group">
+            <label>Recommendation *</label>
+            <div class="filter-pills" id="fb-recommendation-pills">
+              ${recommendationOptions.map(opt => `
+                <button type="button" class="filter-pill ${feedbackRecommendationValue === opt.value ? 'active' : ''}" data-value="${opt.value}" onclick="setFeedbackRecommendation('${opt.value}')">${opt.label}</button>
+              `).join('')}
+            </div>
+          </div>
+          <div class="form-group">
+            <label>Comments</label>
+            <textarea id="fb-comments" rows="4" placeholder="Strengths, concerns, notes for the hiring decision...">${iv.comments || ''}</textarea>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button class="modal-cancel-btn" onclick="closeFeedbackModal()">Cancel</button>
+          <button class="modal-save-btn" onclick="saveFeedback(${interviewId})">Save Feedback</button>
+        </div>
+      </div>
+    </div>
+  `;
+
+  document.getElementById('modal-root').innerHTML = modalHtml;
+  lucide.createIcons();
+}
+
+function setFeedbackRating(value) {
+  feedbackRatingValue = value;
+  document.querySelectorAll('#fb-rating-picker button').forEach(btn => {
+    btn.classList.toggle('filled', parseInt(btn.dataset.star, 10) <= value);
+  });
+}
+
+function setFeedbackRecommendation(value) {
+  feedbackRecommendationValue = value;
+  document.querySelectorAll('#fb-recommendation-pills .filter-pill').forEach(btn => {
+    btn.classList.toggle('active', btn.dataset.value === value);
+  });
+}
+
+function closeFeedbackModal() {
+  document.getElementById('modal-root').innerHTML = '';
+  feedbackRatingValue = 0;
+  feedbackRecommendationValue = '';
+}
+
+function saveFeedback(interviewId) {
+  if (feedbackRatingValue < 1 || !feedbackRecommendationValue) {
+    alert('Please select a rating and a recommendation.');
+    return;
+  }
+
+  fetch('save_interview_feedback.php', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      interview_id: interviewId,
+      rating: feedbackRatingValue,
+      recommendation: feedbackRecommendationValue,
+      comments: document.getElementById('fb-comments').value.trim()
+    })
+  })
+    .then(response => response.json())
+    .then(result => {
+      if (!result.success) {
+        alert(result.message || 'Failed to save feedback.');
+        return;
+      }
+      closeFeedbackModal();
+      loadFeedback();
+    })
+    .catch(error => console.error('Error saving feedback:', error));
+}
+
+// ================= ACCESS CONTROL =================
+
+let hrAdminList = [];
+
+function loadHrAdmins() {
+  fetch('get_hr_admins.php')
+    .then(response => response.json())
+    .then(result => {
+      if (!result.success) {
+        document.getElementById('hr-admins-table-body').innerHTML =
+          `<tr><td colspan="5" class="panel-empty">${result.message || 'Unable to load HR users.'}</td></tr>`;
+        return;
+      }
+      hrAdminList = result.data;
+      renderHrAdminsTable();
+    })
+    .catch(error => console.error('Error loading HR admins:', error));
+}
+
+function renderHrAdminsTable() {
+  const tbody = document.getElementById('hr-admins-table-body');
+
+  if (hrAdminList.length === 0) {
+    tbody.innerHTML = `<tr><td colspan="5" class="panel-empty">No HR users found.</td></tr>`;
+    return;
+  }
+
+  tbody.innerHTML = hrAdminList.map(a => {
+    const fullName = `${a.first_name} ${a.last_name}`.trim();
+    const isSelf = currentHrAdmin && Number(a.id) === Number(currentHrAdmin.id);
+    return `
+      <tr>
+        <td>${fullName}${isSelf ? ' <span class="cell-sub" style="display:inline;">(you)</span>' : ''}</td>
+        <td>${a.email}</td>
+        <td>${a.department || '—'}</td>
+        <td><span class="role-badge ${a.role}">${a.role === 'admin' ? 'Admin' : 'Recruiter'}</span></td>
+        <td>
+          <div class="vacancy-card-actions">
+            <button title="Edit" onclick="openHrAdminModal(${a.id})"><i data-lucide="edit-3"></i></button>
+            ${isSelf ? '' : `<button title="Remove access" onclick="confirmDeleteHrAdmin(${a.id})"><i data-lucide="trash-2"></i></button>`}
+          </div>
+        </td>
+      </tr>
+    `;
+  }).join('');
+
+  lucide.createIcons();
+}
+
+function openHrAdminModal(id) {
+  const admin = id ? hrAdminList.find(a => a.id === id) : null;
+
+  const modalHtml = `
+    <div class="modal-overlay" id="hr-admin-modal-overlay" onclick="if(event.target===this) closeHrAdminModal()">
+      <div class="modal-dialog">
+        <div class="modal-header">
+          <h2>${admin ? 'Edit HR User' : 'Add HR User'}</h2>
+          <button class="modal-close-btn" onclick="closeHrAdminModal()"><i data-lucide="x"></i></button>
+        </div>
+        <div class="modal-body">
+          <div class="form-grid-2">
+            <div class="form-group">
+              <label>First Name *</label>
+              <input type="text" id="ha-first-name" value="${admin ? admin.first_name : ''}" placeholder="e.g., Alice">
+            </div>
+            <div class="form-group">
+              <label>Last Name *</label>
+              <input type="text" id="ha-last-name" value="${admin ? admin.last_name : ''}" placeholder="Morgan">
+            </div>
+          </div>
+          <div class="form-group">
+            <label>Email *</label>
+            <input type="email" id="ha-email" value="${admin ? admin.email : ''}" placeholder="alice@company.com">
+          </div>
+          <div class="form-group">
+            <label>Department</label>
+            <input type="text" id="ha-department" value="${admin ? admin.department || '' : 'Human Resources'}" placeholder="Human Resources">
+          </div>
+          <div class="form-group">
+            <label>Role</label>
+            <select id="ha-role">
+              <option value="recruiter" ${!admin || admin.role === 'recruiter' ? 'selected' : ''}>Recruiter</option>
+              <option value="admin" ${admin && admin.role === 'admin' ? 'selected' : ''}>Admin</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label>${admin ? 'New Password' : 'Password *'}</label>
+            <input type="password" id="ha-password" placeholder="${admin ? 'Leave blank to keep current password' : 'At least 8 characters'}">
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button class="modal-cancel-btn" onclick="closeHrAdminModal()">Cancel</button>
+          <button class="modal-save-btn" onclick="saveHrAdmin(${admin ? admin.id : 'null'})">${admin ? 'Save Changes' : 'Add HR User'}</button>
+        </div>
+      </div>
+    </div>
+  `;
+
+  document.getElementById('modal-root').innerHTML = modalHtml;
+  lucide.createIcons();
+}
+
+function closeHrAdminModal() {
+  document.getElementById('modal-root').innerHTML = '';
+}
+
+function saveHrAdmin(id) {
+  const payload = {
+    id: id || 0,
+    first_name: document.getElementById('ha-first-name').value.trim(),
+    last_name: document.getElementById('ha-last-name').value.trim(),
+    email: document.getElementById('ha-email').value.trim(),
+    department: document.getElementById('ha-department').value.trim(),
+    role: document.getElementById('ha-role').value,
+    password: document.getElementById('ha-password').value
+  };
+
+  if (!payload.first_name || !payload.last_name || !payload.email) {
+    alert('First name, last name, and email are required.');
+    return;
+  }
+
+  fetch('save_hr_admin.php', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(payload)
+  })
+    .then(response => response.json())
+    .then(result => {
+      if (!result.success) {
+        alert(result.message || 'Failed to save HR user.');
+        return;
+      }
+      closeHrAdminModal();
+      loadHrAdmins();
+    })
+    .catch(error => console.error('Error saving HR admin:', error));
+}
+
+function confirmDeleteHrAdmin(id) {
+  const admin = hrAdminList.find(a => a.id === id);
+  if (!admin) return;
+
+  const fullName = `${admin.first_name} ${admin.last_name}`.trim();
+
+  const modalHtml = `
+    <div class="modal-overlay" id="confirm-modal-overlay" onclick="if(event.target===this) closeConfirmModal()">
+      <div class="modal-dialog confirm-modal-dialog">
+        <div class="modal-header">
+          <h2>Remove Access</h2>
+          <button class="modal-close-btn" onclick="closeConfirmModal()"><i data-lucide="x"></i></button>
+        </div>
+        <div class="modal-body">
+          <p class="confirm-modal-message">Are you sure you want to remove <strong>${fullName}</strong>'s access to the HR dashboard? They won't be able to sign in anymore.</p>
+        </div>
+        <div class="modal-footer">
+          <button class="modal-cancel-btn" onclick="closeConfirmModal()">Cancel</button>
+          <button class="modal-save-btn" onclick="runDeleteHrAdmin(${id})">Remove Access</button>
+        </div>
+      </div>
+    </div>
+  `;
+
+  document.getElementById('modal-root').innerHTML = modalHtml;
+  lucide.createIcons();
+}
+
+function runDeleteHrAdmin(id) {
+  fetch('delete_hr_admin.php', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ id })
+  })
+    .then(response => response.json())
+    .then(result => {
+      closeConfirmModal();
+      if (!result.success) {
+        alert(result.message || 'Failed to remove access.');
+        return;
+      }
+      loadHrAdmins();
+    })
+    .catch(error => console.error('Error deleting HR admin:', error));
 }
 
 // ================= SIDEBAR COLLAPSE =================
