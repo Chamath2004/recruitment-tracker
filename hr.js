@@ -51,6 +51,7 @@ function switchHrView(navEl, view, label) {
   document.getElementById('interviews-view').style.display = view === 'interviews' ? 'block' : 'none';
   document.getElementById('access-view').style.display = view === 'access' ? 'block' : 'none';
   document.getElementById('feedback-view').style.display = view === 'feedback' ? 'block' : 'none';
+  document.getElementById('settings-view').style.display = view === 'settings' ? 'block' : 'none';
   document.getElementById('placeholder-view').style.display = view === 'placeholder' ? 'block' : 'none';
 
   if (view === 'placeholder') {
@@ -65,6 +66,8 @@ function switchHrView(navEl, view, label) {
     loadHrAdmins();
   } else if (view === 'feedback') {
     loadFeedback();
+  } else if (view === 'settings') {
+    loadSettingsView();
   }
 }
 
@@ -628,6 +631,7 @@ function renderVacancyWorkflowsList() {
 
 let interviewList = [];
 let applicationPickerList = [];
+let interviewerOptionsList = [];
 let interviewFilter = 'all';
 
 const interviewTypeSuggestions = ['Phone Screen', 'Technical Interview', 'Panel Interview', 'Culture Fit', 'Final Interview'];
@@ -635,10 +639,12 @@ const interviewTypeSuggestions = ['Phone Screen', 'Technical Interview', 'Panel 
 function loadInterviews() {
   Promise.all([
     fetch('get_interviews.php').then(r => r.json()),
-    fetch('get_applications_hr.php').then(r => r.json())
-  ]).then(([interviewsResult, applicationsResult]) => {
+    fetch('get_applications_hr.php').then(r => r.json()),
+    fetch('get_interviewer_options.php').then(r => r.json())
+  ]).then(([interviewsResult, applicationsResult, optionsResult]) => {
     if (interviewsResult.success) interviewList = interviewsResult.data;
     if (applicationsResult.success) applicationPickerList = applicationsResult.data;
+    if (optionsResult.success) interviewerOptionsList = optionsResult.data;
     renderInterviewList();
   }).catch(error => console.error('Error loading interviews:', error));
 
@@ -833,7 +839,13 @@ function openInterviewModal(id) {
           </div>
           <div class="form-group">
             <label>Interviewer</label>
-            <input type="text" id="if-interviewer" value="${interview ? interview.interviewer || '' : ''}" placeholder="e.g., Alice Morgan">
+            <select id="if-interviewer">
+              <option value="">Unassigned</option>
+              ${interviewerOptionsList.map(iv => `
+                <option value="${iv.id}" ${interview && interview.interviewer_id === iv.id ? 'selected' : ''}>${iv.name}</option>
+              `).join('')}
+            </select>
+            <p class="workflow-card-hint" style="margin-top: 6px;">The assigned interviewer submits feedback from their own portal.</p>
           </div>
           <div class="form-group">
             <label>Meeting Link / Location</label>
@@ -944,7 +956,7 @@ function saveInterview(id) {
     interview_time: document.getElementById('if-time').value,
     duration_minutes: parseInt(document.getElementById('if-duration').value, 10),
     mode: document.getElementById('if-mode').value,
-    interviewer: document.getElementById('if-interviewer').value.trim(),
+    interviewer_id: parseInt(document.getElementById('if-interviewer').value, 10) || null,
     meeting_link: document.getElementById('if-link').value.trim(),
     notes: document.getElementById('if-notes').value.trim()
   };
@@ -1030,9 +1042,61 @@ function loadFeedback() {
     .then(result => {
       if (!result.success) return;
       feedbackList = result.data;
-      renderFeedbackTable();
+      renderFeedbackSummary();
+      renderFeedbackList();
     })
     .catch(error => console.error('Error loading feedback:', error));
+}
+
+function daysOverdue(dateStr) {
+  const interviewDate = new Date(`${dateStr}T00:00:00`);
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  return Math.floor((today - interviewDate) / (1000 * 60 * 60 * 24));
+}
+
+function overdueLabel(days) {
+  if (days <= 0) return 'Due today';
+  if (days === 1) return '1 day ago';
+  return `${days} days ago`;
+}
+
+function renderFeedbackSummary() {
+  const pending = feedbackList.filter(iv => !iv.feedback_id);
+  const overdue = pending.filter(iv => daysOverdue(iv.interview_date) > 2);
+  const interviewersToFollowUp = new Set(pending.filter(iv => iv.interviewer_id).map(iv => iv.interviewer_id));
+
+  const banner = document.getElementById('feedback-alert-banner');
+  if (pending.length > 0) {
+    banner.style.display = '';
+    banner.innerHTML = `
+      <i data-lucide="alert-circle"></i>
+      <div>
+        <div class="feedback-alert-title">Action Required</div>
+        <div class="feedback-alert-desc">${pending.length} interview${pending.length === 1 ? '' : 's'} ${pending.length === 1 ? 'is' : 'are'} awaiting feedback. Follow up with interviewers to avoid delays in the recruitment process.</div>
+      </div>
+    `;
+  } else {
+    banner.style.display = 'none';
+  }
+
+  const stats = [
+    { icon: 'clock', color: 'amber', value: pending.length, label: 'Pending Feedback' },
+    { icon: 'alert-circle', color: 'red', value: overdue.length, label: 'Overdue (2+ days)' },
+    { icon: 'user', color: 'purple', value: interviewersToFollowUp.size, label: 'Interviewers to Follow Up' }
+  ];
+
+  document.getElementById('feedback-stat-grid').innerHTML = stats.map(s => `
+    <div class="metric-card">
+      <div class="metric-top">
+        <div class="metric-icon ${s.color}"><i data-lucide="${s.icon}"></i></div>
+      </div>
+      <div class="metric-value">${s.value}</div>
+      <div class="metric-label">${s.label}</div>
+    </div>
+  `).join('');
+
+  lucide.createIcons();
 }
 
 function setFeedbackFilter(status) {
@@ -1040,7 +1104,7 @@ function setFeedbackFilter(status) {
   document.querySelectorAll('#feedback-filter-pills .filter-pill').forEach(btn => {
     btn.classList.toggle('active', btn.dataset.status === status);
   });
-  renderFeedbackTable();
+  renderFeedbackList();
 }
 
 function recommendationLabel(rec) {
@@ -1057,9 +1121,9 @@ function starDisplay(rating) {
   return '★'.repeat(rating) + '☆'.repeat(5 - rating);
 }
 
-function renderFeedbackTable() {
-  const tbody = document.getElementById('feedback-table-body');
-  if (!tbody) return;
+function renderFeedbackList() {
+  const container = document.getElementById('feedback-list-body');
+  if (!container) return;
 
   const filtered = feedbackList.filter(iv => {
     if (feedbackFilter === 'pending') return !iv.feedback_id;
@@ -1067,42 +1131,71 @@ function renderFeedbackTable() {
     return true;
   });
 
+  const titleEl = document.getElementById('feedback-list-title');
+  if (titleEl) {
+    titleEl.textContent = feedbackFilter === 'pending' ? 'Interviews Awaiting Feedback'
+      : feedbackFilter === 'submitted' ? 'Submitted Feedback'
+      : 'All Completed Interviews';
+  }
+
   if (filtered.length === 0) {
     const emptyMessage = feedbackFilter === 'pending'
-      ? "No completed interviews are waiting on feedback."
+      ? "All feedback has been submitted! 🎉"
       : feedbackFilter === 'submitted'
         ? "No feedback has been submitted yet."
         : "No completed interviews yet.";
-    tbody.innerHTML = `<tr><td colspan="7" class="panel-empty">${emptyMessage}</td></tr>`;
+    container.innerHTML = `<div class="panel-empty" style="padding: 40px 20px;">${emptyMessage}</div>`;
     return;
   }
 
-  tbody.innerHTML = filtered.map(iv => `
-    <tr>
-      <td>${iv.candidate_name}</td>
-      <td>${iv.job_title}</td>
-      <td>${iv.interview_type}</td>
-      <td>${formatInterviewDateTime(iv.interview_date, iv.interview_time)}</td>
-      <td>${iv.interviewer || '—'}</td>
-      <td>
-        ${iv.feedback_id ? `
+  container.innerHTML = filtered.map(iv => {
+    const canSubmit = !iv.interviewer_id;
+    const overdueDays = daysOverdue(iv.interview_date);
+    const isOverdue = !iv.feedback_id && overdueDays > 2;
+
+    let metaHtml;
+    if (iv.feedback_id) {
+      metaHtml = `
+        <div class="feedback-row-feedback">
           <span class="feedback-stars">${starDisplay(iv.rating)}</span>
-          <div><span class="stage-pill ${recommendationPillClass(iv.recommendation)}">${recommendationLabel(iv.recommendation)}</span></div>
-        ` : `<span class="panel-empty" style="padding: 0; font-size: 12px;">Awaiting feedback</span>`}
-      </td>
-      <td>
-        ${iv.feedback_id ? `
+          <span class="stage-pill ${recommendationPillClass(iv.recommendation)}">${recommendationLabel(iv.recommendation)}</span>
+        </div>
+        ${canSubmit ? `
           <div class="vacancy-card-actions">
             <button title="Edit feedback" onclick="openFeedbackModal(${iv.id})"><i data-lucide="edit-3"></i></button>
           </div>
-        ` : `
+        ` : `<span class="panel-empty" style="padding: 0; font-size: 12px;">View only</span>`}
+      `;
+    } else {
+      metaHtml = `
+        <div class="feedback-interviewer-chip">
+          <div class="feedback-interviewer-avatar">${getInitials(iv.interviewer) || '?'}</div>
+          <div>
+            <div class="feedback-interviewer-name">${iv.interviewer || 'Unassigned'}</div>
+            <div class="feedback-interviewer-label">Interviewer</div>
+          </div>
+        </div>
+        <span class="stage-pill ${isOverdue ? 'rejected' : 'pending'}">${overdueLabel(overdueDays)}</span>
+        ${canSubmit ? `
           <button class="feedback-add-btn" onclick="openFeedbackModal(${iv.id})">
             <i data-lucide="message-square-plus"></i> Add Feedback
           </button>
-        `}
-      </td>
-    </tr>
-  `).join('');
+        ` : ''}
+      `;
+    }
+
+    return `
+      <div class="panel-row feedback-row">
+        <div class="panel-row-avatar ${!iv.feedback_id ? (isOverdue ? 'danger' : 'warning') : ''}">${getInitials(iv.candidate_name) || '?'}</div>
+        <div class="panel-row-body">
+          <div class="panel-row-title">${iv.candidate_name}</div>
+          <div class="panel-row-subtitle">${iv.job_title} · ${iv.interview_type}</div>
+          <div class="panel-row-subtitle">Completed ${formatInterviewDateTime(iv.interview_date, iv.interview_time)}</div>
+        </div>
+        <div class="feedback-row-meta">${metaHtml}</div>
+      </div>
+    `;
+  }).join('');
 
   lucide.createIcons();
 }
@@ -1110,6 +1203,12 @@ function renderFeedbackTable() {
 function openFeedbackModal(interviewId) {
   const iv = feedbackList.find(item => Number(item.id) === Number(interviewId));
   if (!iv) return;
+
+  const canSubmit = !iv.interviewer_id;
+  if (!canSubmit) {
+    alert('This interview has an assigned interviewer — feedback must be submitted from the Interviewer Portal.');
+    return;
+  }
 
   feedbackRatingValue = iv.rating || 0;
   feedbackRecommendationValue = iv.recommendation || '';
@@ -1399,6 +1498,275 @@ function runDeleteHrAdmin(id) {
       loadHrAdmins();
     })
     .catch(error => console.error('Error deleting HR admin:', error));
+}
+
+function setAccessTab(tab) {
+  document.querySelectorAll('#access-tab-pills .filter-pill').forEach(btn => {
+    btn.classList.toggle('active', btn.dataset.tab === tab);
+  });
+  document.getElementById('access-hr-users-section').style.display = tab === 'hr' ? 'block' : 'none';
+  document.getElementById('access-interviewers-section').style.display = tab === 'interviewers' ? 'block' : 'none';
+
+  if (tab === 'interviewers') {
+    loadInterviewersList();
+  }
+}
+
+let interviewerList = [];
+
+function loadInterviewersList() {
+  fetch('get_interviewers.php')
+    .then(response => response.json())
+    .then(result => {
+      if (!result.success) {
+        document.getElementById('interviewers-table-body').innerHTML =
+          `<tr><td colspan="4" class="panel-empty">${result.message || 'Unable to load interviewers.'}</td></tr>`;
+        return;
+      }
+      interviewerList = result.data;
+      renderInterviewersTable();
+    })
+    .catch(error => console.error('Error loading interviewers:', error));
+}
+
+function renderInterviewersTable() {
+  const tbody = document.getElementById('interviewers-table-body');
+
+  if (interviewerList.length === 0) {
+    tbody.innerHTML = `<tr><td colspan="4" class="panel-empty">No interviewers found.</td></tr>`;
+    return;
+  }
+
+  tbody.innerHTML = interviewerList.map(iv => {
+    const fullName = `${iv.first_name} ${iv.last_name}`.trim();
+    return `
+      <tr>
+        <td>${fullName}</td>
+        <td>${iv.email}</td>
+        <td>${iv.department || '—'}</td>
+        <td>
+          <div class="vacancy-card-actions">
+            <button title="Edit" onclick="openInterviewerModal(${iv.id})"><i data-lucide="edit-3"></i></button>
+            <button title="Remove access" onclick="confirmDeleteInterviewer(${iv.id})"><i data-lucide="trash-2"></i></button>
+          </div>
+        </td>
+      </tr>
+    `;
+  }).join('');
+
+  lucide.createIcons();
+}
+
+function openInterviewerModal(id) {
+  const interviewer = id ? interviewerList.find(iv => iv.id === id) : null;
+
+  const modalHtml = `
+    <div class="modal-overlay" id="interviewer-modal-overlay" onclick="if(event.target===this) closeInterviewerModal()">
+      <div class="modal-dialog">
+        <div class="modal-header">
+          <h2>${interviewer ? 'Edit Interviewer' : 'Add Interviewer'}</h2>
+          <button class="modal-close-btn" onclick="closeInterviewerModal()"><i data-lucide="x"></i></button>
+        </div>
+        <div class="modal-body">
+          <div class="form-grid-2">
+            <div class="form-group">
+              <label>First Name *</label>
+              <input type="text" id="iv-first-name" value="${interviewer ? interviewer.first_name : ''}" placeholder="e.g., Alice">
+            </div>
+            <div class="form-group">
+              <label>Last Name *</label>
+              <input type="text" id="iv-last-name" value="${interviewer ? interviewer.last_name : ''}" placeholder="Morgan">
+            </div>
+          </div>
+          <div class="form-group">
+            <label>Email *</label>
+            <input type="email" id="iv-email" value="${interviewer ? interviewer.email : ''}" placeholder="alice@company.com">
+          </div>
+          <div class="form-group">
+            <label>Department</label>
+            <input type="text" id="iv-department" value="${interviewer ? interviewer.department || '' : ''}" placeholder="Engineering">
+          </div>
+          <div class="form-group">
+            <label>${interviewer ? 'New Password' : 'Password *'}</label>
+            <input type="password" id="iv-password" placeholder="${interviewer ? 'Leave blank to keep current password' : 'At least 8 characters'}">
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button class="modal-cancel-btn" onclick="closeInterviewerModal()">Cancel</button>
+          <button class="modal-save-btn" onclick="saveInterviewer(${interviewer ? interviewer.id : 'null'})">${interviewer ? 'Save Changes' : 'Add Interviewer'}</button>
+        </div>
+      </div>
+    </div>
+  `;
+
+  document.getElementById('modal-root').innerHTML = modalHtml;
+  lucide.createIcons();
+}
+
+function closeInterviewerModal() {
+  document.getElementById('modal-root').innerHTML = '';
+}
+
+function saveInterviewer(id) {
+  const payload = {
+    id: id || 0,
+    first_name: document.getElementById('iv-first-name').value.trim(),
+    last_name: document.getElementById('iv-last-name').value.trim(),
+    email: document.getElementById('iv-email').value.trim(),
+    department: document.getElementById('iv-department').value.trim(),
+    password: document.getElementById('iv-password').value
+  };
+
+  if (!payload.first_name || !payload.last_name || !payload.email) {
+    alert('First name, last name, and email are required.');
+    return;
+  }
+
+  fetch('save_interviewer.php', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(payload)
+  })
+    .then(response => response.json())
+    .then(result => {
+      if (!result.success) {
+        alert(result.message || 'Failed to save interviewer.');
+        return;
+      }
+      closeInterviewerModal();
+      loadInterviewersList();
+    })
+    .catch(error => console.error('Error saving interviewer:', error));
+}
+
+function confirmDeleteInterviewer(id) {
+  const interviewer = interviewerList.find(iv => iv.id === id);
+  if (!interviewer) return;
+
+  const fullName = `${interviewer.first_name} ${interviewer.last_name}`.trim();
+
+  const modalHtml = `
+    <div class="modal-overlay" id="confirm-modal-overlay" onclick="if(event.target===this) closeConfirmModal()">
+      <div class="modal-dialog confirm-modal-dialog">
+        <div class="modal-header">
+          <h2>Remove Access</h2>
+          <button class="modal-close-btn" onclick="closeConfirmModal()"><i data-lucide="x"></i></button>
+        </div>
+        <div class="modal-body">
+          <p class="confirm-modal-message">Are you sure you want to remove <strong>${fullName}</strong>'s interviewer access? They won't be able to sign in anymore.</p>
+        </div>
+        <div class="modal-footer">
+          <button class="modal-cancel-btn" onclick="closeConfirmModal()">Cancel</button>
+          <button class="modal-save-btn" onclick="runDeleteInterviewer(${id})">Remove Access</button>
+        </div>
+      </div>
+    </div>
+  `;
+
+  document.getElementById('modal-root').innerHTML = modalHtml;
+  lucide.createIcons();
+}
+
+function runDeleteInterviewer(id) {
+  fetch('delete_interviewer.php', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ id })
+  })
+    .then(response => response.json())
+    .then(result => {
+      closeConfirmModal();
+      if (!result.success) {
+        alert(result.message || 'Failed to remove access.');
+        return;
+      }
+      loadInterviewersList();
+    })
+    .catch(error => console.error('Error deleting interviewer:', error));
+}
+
+// ================= SETTINGS =================
+
+function loadSettingsView() {
+  document.getElementById('settings-current-password').value = '';
+  document.getElementById('settings-new-password').value = '';
+  document.getElementById('settings-confirm-password').value = '';
+
+  const manageLink = document.getElementById('settings-manage-team-link');
+  if (manageLink) {
+    manageLink.style.display = currentHrAdmin && currentHrAdmin.role === 'admin' ? '' : 'none';
+  }
+
+  fetch('get_team_members.php')
+    .then(response => response.json())
+    .then(result => {
+      if (!result.success) return;
+      renderTeamMembersList(result.data);
+    })
+    .catch(error => console.error('Error loading team members:', error));
+}
+
+function renderTeamMembersList(members) {
+  const container = document.getElementById('settings-team-list');
+  if (!container) return;
+
+  if (members.length === 0) {
+    container.innerHTML = `<div class="panel-empty">No team members yet.</div>`;
+    return;
+  }
+
+  container.innerHTML = members.map(m => {
+    const fullName = `${m.first_name} ${m.last_name}`.trim();
+    return `
+      <div class="panel-row">
+        <div class="panel-row-avatar">${getInitials(fullName) || '?'}</div>
+        <div class="panel-row-body">
+          <div class="panel-row-title">${fullName}</div>
+          <div class="panel-row-subtitle">${m.email}</div>
+        </div>
+        <span class="role-badge ${m.role}">${m.role === 'admin' ? 'Admin' : 'Recruiter'}</span>
+      </div>
+    `;
+  }).join('');
+}
+
+function changeHrPassword() {
+  const currentPassword = document.getElementById('settings-current-password').value;
+  const newPassword = document.getElementById('settings-new-password').value;
+  const confirmPassword = document.getElementById('settings-confirm-password').value;
+
+  if (!currentPassword || !newPassword || !confirmPassword) {
+    alert('Please fill in all password fields.');
+    return;
+  }
+
+  if (newPassword.length < 8) {
+    alert('New password must be at least 8 characters.');
+    return;
+  }
+
+  if (newPassword !== confirmPassword) {
+    alert('New password and confirmation do not match.');
+    return;
+  }
+
+  fetch('change_hr_password.php', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ current_password: currentPassword, new_password: newPassword })
+  })
+    .then(response => response.json())
+    .then(result => {
+      if (!result.success) {
+        alert(result.message || 'Failed to change password.');
+        return;
+      }
+      document.getElementById('settings-current-password').value = '';
+      document.getElementById('settings-new-password').value = '';
+      document.getElementById('settings-confirm-password').value = '';
+      alert('Password updated successfully.');
+    })
+    .catch(error => console.error('Error changing password:', error));
 }
 
 // ================= SIDEBAR COLLAPSE =================

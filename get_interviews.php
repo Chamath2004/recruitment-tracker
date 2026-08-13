@@ -23,6 +23,7 @@ if ($result) {
         $row['application_id'] = (int) $row['application_id'];
         $row['candidate_id'] = (int) $row['candidate_id'];
         $row['duration_minutes'] = (int) $row['duration_minutes'];
+        $row['interviewer_id'] = $row['interviewer_id'] !== null ? (int) $row['interviewer_id'] : null;
         $interviews[] = $row;
     }
 }

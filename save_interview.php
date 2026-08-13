@@ -23,7 +23,7 @@ $interviewType = trim($data['interview_type'] ?? '');
 $interviewDate = trim($data['interview_date'] ?? '');
 $interviewTime = trim($data['interview_time'] ?? '');
 $duration = isset($data['duration_minutes']) ? (int) $data['duration_minutes'] : 30;
-$interviewer = trim($data['interviewer'] ?? '');
+$interviewerId = isset($data['interviewer_id']) && $data['interviewer_id'] ? (int) $data['interviewer_id'] : null;
 $mode = trim($data['mode'] ?? 'video');
 $meetingLink = trim($data['meeting_link'] ?? '');
 $notes = trim($data['notes'] ?? '');
@@ -50,16 +50,31 @@ $candidateId = (int) $app['candidate_id'];
 $candidateName = $app['full_name'] && trim($app['full_name']) !== '' ? $app['full_name'] : $app['email'];
 $jobTitle = $app['job_title'];
 
+$interviewerName = '';
+if ($interviewerId) {
+    $staffStmt = $conn->prepare("SELECT first_name, last_name FROM interviewers WHERE id = ?");
+    $staffStmt->bind_param("i", $interviewerId);
+    $staffStmt->execute();
+    $staffResult = $staffStmt->get_result();
+    if ($staffResult->num_rows > 0) {
+        $staff = $staffResult->fetch_assoc();
+        $interviewerName = trim($staff['first_name'] . ' ' . $staff['last_name']);
+    } else {
+        $interviewerId = null;
+    }
+    $staffStmt->close();
+}
+
 if ($id) {
-    $stmt = $conn->prepare("UPDATE interviews SET interview_type = ?, interview_date = ?, interview_time = ?, duration_minutes = ?, interviewer = ?, mode = ?, meeting_link = ?, notes = ? WHERE id = ?");
-    $stmt->bind_param("sssissssi", $interviewType, $interviewDate, $interviewTime, $duration, $interviewer, $mode, $meetingLink, $notes, $id);
+    $stmt = $conn->prepare("UPDATE interviews SET interview_type = ?, interview_date = ?, interview_time = ?, duration_minutes = ?, interviewer = ?, interviewer_id = ?, mode = ?, meeting_link = ?, notes = ? WHERE id = ?");
+    $stmt->bind_param("sssisisssi", $interviewType, $interviewDate, $interviewTime, $duration, $interviewerName, $interviewerId, $mode, $meetingLink, $notes, $id);
     $stmt->execute();
     $stmt->close();
 
     $message = "Your $interviewType interview for $jobTitle has been rescheduled to $interviewDate at $interviewTime.";
 } else {
-    $stmt = $conn->prepare("INSERT INTO interviews (application_id, candidate_id, candidate_name, job_title, interview_type, interview_date, interview_time, duration_minutes, interviewer, mode, meeting_link, notes, status) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'scheduled')");
-    $stmt->bind_param("iisssssissss", $applicationId, $candidateId, $candidateName, $jobTitle, $interviewType, $interviewDate, $interviewTime, $duration, $interviewer, $mode, $meetingLink, $notes);
+    $stmt = $conn->prepare("INSERT INTO interviews (application_id, candidate_id, candidate_name, job_title, interview_type, interview_date, interview_time, duration_minutes, interviewer, interviewer_id, mode, meeting_link, notes, status) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'scheduled')");
+    $stmt->bind_param("iisssssisisss", $applicationId, $candidateId, $candidateName, $jobTitle, $interviewType, $interviewDate, $interviewTime, $duration, $interviewerName, $interviewerId, $mode, $meetingLink, $notes);
 
     $stmt->execute();
     $id = $conn->insert_id;

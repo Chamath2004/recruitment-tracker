@@ -32,14 +32,24 @@ if ($interviewId <= 0 || $rating < 1 || $rating > 5 || !in_array($recommendation
     exit();
 }
 
-$interviewStmt = $conn->prepare("SELECT id FROM interviews WHERE id = ? AND status = 'completed'");
+$interviewStmt = $conn->prepare("SELECT interviewer_id FROM interviews WHERE id = ? AND status = 'completed'");
 $interviewStmt->bind_param("i", $interviewId);
 $interviewStmt->execute();
-$exists = $interviewStmt->get_result()->num_rows > 0;
-$interviewStmt->close();
+$interviewResult = $interviewStmt->get_result();
 
-if (!$exists) {
+if ($interviewResult->num_rows === 0) {
+    $interviewStmt->close();
     echo json_encode(["success" => false, "message" => "This interview isn't marked as completed."]);
+    $conn->close();
+    exit();
+}
+
+$interviewRow = $interviewResult->fetch_assoc();
+$interviewStmt->close();
+$assignedInterviewerId = $interviewRow['interviewer_id'] !== null ? (int) $interviewRow['interviewer_id'] : null;
+
+if ($assignedInterviewerId !== null) {
+    echo json_encode(["success" => false, "message" => "This interview has an assigned interviewer — feedback must be submitted from the Interviewer Portal."]);
     $conn->close();
     exit();
 }

@@ -67,7 +67,7 @@
             <i data-lucide="bell"></i>
             <span>Pending Feedback</span>
           </a>
-          <a href="#" class="nav-item" id="nav-settings" onclick="switchHrView(this, 'placeholder', 'Settings')">
+          <a href="#" class="nav-item" id="nav-settings" onclick="switchHrView(this, 'settings', 'Settings')">
             <i data-lucide="settings"></i>
             <span>Settings</span>
           </a>
@@ -252,30 +252,62 @@
       </div>
 
       <div id="access-view" style="display: none;">
-        <div class="view-header-row">
-          <div>
-            <h1 style="font-size: 24px; font-weight: 700; margin-bottom: 4px;">Access Control</h1>
-            <p style="font-size: 14px; color: var(--text-muted);">Manage who can sign in to the HR dashboard</p>
+        <header class="header">
+          <h1>Access Control</h1>
+          <p>Manage who can sign in to the platform</p>
+        </header>
+
+        <div class="vacancy-toolbar">
+          <div class="filter-pills" id="access-tab-pills">
+            <button class="filter-pill active" data-tab="hr" onclick="setAccessTab('hr')">HR Users</button>
+            <button class="filter-pill" data-tab="interviewers" onclick="setAccessTab('interviewers')">Interviewers</button>
           </div>
-          <button class="new-vacancy-btn" onclick="openHrAdminModal()">
-            <i data-lucide="user-plus"></i> Add HR User
-          </button>
         </div>
 
-        <div class="panel-card">
-          <div class="table-wrap">
-            <table class="data-table">
-              <thead>
-                <tr>
-                  <th>Name</th>
-                  <th>Email</th>
-                  <th>Department</th>
-                  <th>Role</th>
-                  <th></th>
-                </tr>
-              </thead>
-              <tbody id="hr-admins-table-body"></tbody>
-            </table>
+        <div id="access-hr-users-section">
+          <div class="access-tab-toolbar">
+            <button class="new-vacancy-btn" onclick="openHrAdminModal()">
+              <i data-lucide="user-plus"></i> Add HR User
+            </button>
+          </div>
+          <div class="panel-card">
+            <div class="table-wrap">
+              <table class="data-table">
+                <thead>
+                  <tr>
+                    <th>Name</th>
+                    <th>Email</th>
+                    <th>Department</th>
+                    <th>Role</th>
+                    <th></th>
+                  </tr>
+                </thead>
+                <tbody id="hr-admins-table-body"></tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+
+        <div id="access-interviewers-section" style="display: none;">
+          <div class="access-tab-toolbar">
+            <button class="new-vacancy-btn" onclick="openInterviewerModal()">
+              <i data-lucide="user-plus"></i> Add Interviewer
+            </button>
+          </div>
+          <div class="panel-card">
+            <div class="table-wrap">
+              <table class="data-table">
+                <thead>
+                  <tr>
+                    <th>Name</th>
+                    <th>Email</th>
+                    <th>Department</th>
+                    <th></th>
+                  </tr>
+                </thead>
+                <tbody id="interviewers-table-body"></tbody>
+              </table>
+            </div>
           </div>
         </div>
       </div>
@@ -283,8 +315,12 @@
       <div id="feedback-view" style="display: none;">
         <header class="header">
           <h1>Pending Feedback</h1>
-          <p>Review completed interviews and record hiring feedback</p>
+          <p>Track and follow up on interviews awaiting feedback submission</p>
         </header>
+
+        <div class="feedback-alert-banner" id="feedback-alert-banner" style="display: none;"></div>
+
+        <div class="metric-grid feedback-stat-grid" id="feedback-stat-grid"></div>
 
         <div class="vacancy-toolbar">
           <div class="filter-pills" id="feedback-filter-pills">
@@ -295,22 +331,48 @@
         </div>
 
         <div class="panel-card">
-          <div class="table-wrap">
-            <table class="data-table">
-              <thead>
-                <tr>
-                  <th>Candidate</th>
-                  <th>Position</th>
-                  <th>Interview</th>
-                  <th>Completed</th>
-                  <th>Interviewer</th>
-                  <th>Feedback</th>
-                  <th></th>
-                </tr>
-              </thead>
-              <tbody id="feedback-table-body"></tbody>
-            </table>
+          <div class="panel-header">
+            <h3 id="feedback-list-title">Interviews Awaiting Feedback</h3>
           </div>
+          <div class="panel-list" id="feedback-list-body"></div>
+        </div>
+      </div>
+
+      <div id="settings-view" style="display: none;">
+        <header class="header">
+          <h1>Settings</h1>
+          <p>Manage your account and view your team</p>
+        </header>
+
+        <div class="panel-card settings-card">
+          <div class="panel-header">
+            <h3><i data-lucide="lock"></i> Change Password</h3>
+          </div>
+          <div class="settings-card-body">
+            <div class="form-group">
+              <label>Current Password</label>
+              <input type="password" id="settings-current-password" placeholder="Enter your current password">
+            </div>
+            <div class="form-group">
+              <label>New Password</label>
+              <input type="password" id="settings-new-password" placeholder="Minimum 8 characters">
+            </div>
+            <div class="form-group">
+              <label>Confirm New Password</label>
+              <input type="password" id="settings-confirm-password" placeholder="Re-enter new password">
+            </div>
+            <div class="settings-card-actions">
+              <button class="modal-save-btn" onclick="changeHrPassword()">Save Password</button>
+            </div>
+          </div>
+        </div>
+
+        <div class="panel-card settings-card">
+          <div class="panel-header">
+            <h3><i data-lucide="users"></i> Team Members</h3>
+            <a href="#" id="settings-manage-team-link" class="settings-manage-link" style="display: none;" onclick="switchHrView(document.getElementById('nav-access'), 'access', 'Access Control'); return false;">Manage in Access Control</a>
+          </div>
+          <div class="panel-list" id="settings-team-list"></div>
         </div>
       </div>
 
