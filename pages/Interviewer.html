@@ -1,0 +1,178 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>TalentFlow - Interviewer Portal</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <script src="https://unpkg.com/lucide@latest"></script>
+  <script>
+    document.documentElement.setAttribute('data-theme', localStorage.getItem('theme') || 'dark');
+  </script>
+  <link rel="stylesheet" href="../assets/css/Candidate.css">
+  <link rel="stylesheet" href="../assets/css/hr.css">
+  <link rel="stylesheet" href="../assets/css/interviewer.css">
+</head>
+
+<body>
+  <button class="theme-toggle-btn" onclick="toggleTheme()" title="Toggle theme">
+    <i id="theme-toggle-icon" data-lucide="sun"></i>
+  </button>
+  <button class="mobile-menu-btn" title="Menu">
+    <i data-lucide="menu"></i>
+  </button>
+  <div class="sidebar-backdrop"></div>
+  <div class="mobile-topbar">
+    <img src="../images/Altrium-logo-1.png" alt="Altrium logo" class="brand-logo-img for-light">
+    <img src="../images/Altrium-logo-white.png" alt="Altrium logo" class="brand-logo-img for-dark">
+  </div>
+
+  <div class="app-container">
+    <!-- Sidebar -->
+    <aside class="sidebar">
+      <button class="sidebar-close-btn" title="Close menu">
+        <i data-lucide="x"></i>
+      </button>
+      <div class="sidebar-top">
+        <div class="brand">
+          <img src="../images/Altrium-logo-1.png" alt="Altrium logo" class="brand-logo-img for-light">
+          <img src="../images/Altrium-logo-white.png" alt="Altrium logo" class="brand-logo-img for-dark">
+          <span class="brand-label">Interviewer</span>
+        </div>
+
+        <nav class="nav-menu">
+          <a href="#" class="nav-item active" id="nav-my-interviews" onclick="switchInterviewerView(this, 'my-interviews')">
+            <i data-lucide="calendar"></i>
+            <span>My Interviews</span>
+          </a>
+          <a href="#" class="nav-item" id="nav-assigned-candidates" onclick="switchInterviewerView(this, 'assigned-candidates')">
+            <i data-lucide="users"></i>
+            <span>Assigned Candidates</span>
+          </a>
+          <a href="#" class="nav-item" id="nav-submit-feedback" onclick="switchInterviewerView(this, 'submit-feedback-list')">
+            <i data-lucide="message-square-plus"></i>
+            <span>Submit Feedback</span>
+          </a>
+        </nav>
+      </div>
+
+      <div class="sidebar-bottom">
+        <div class="user-profile">
+          <div class="avatar" id="sidebar-avatar">--</div>
+          <div class="user-info">
+            <span class="name" id="sidebar-name">Loading…</span>
+            <span class="email" id="sidebar-email"></span>
+          </div>
+        </div>
+        <button class="sign-out-btn" onclick="window.location.href='../api/logout.php?role=interviewer'">
+          <i data-lucide="log-out"></i>
+          <span>Sign Out</span>
+        </button>
+        <button class="collapse-btn">
+          <i data-lucide="chevron-left"></i>
+          <span>Collapse</span>
+        </button>
+      </div>
+    </aside>
+
+    <!-- Main Content -->
+    <main class="main-content">
+      <div id="my-interviews-view">
+        <header class="header">
+          <h1>My Interviews</h1>
+          <p>View your assigned interviews and submit feedback</p>
+        </header>
+
+        <div class="metric-grid feedback-stat-grid" id="mi-stat-grid"></div>
+
+        <div class="feedback-alert-banner" id="mi-alert-banner" style="display: none;"></div>
+
+        <div class="mi-section">
+          <h2 class="mi-section-title"><i data-lucide="calendar"></i> Upcoming Interviews (<span id="mi-upcoming-count">0</span>)</h2>
+          <div id="mi-upcoming-list"></div>
+        </div>
+
+        <div class="mi-section" id="mi-pending-section" style="display: none;">
+          <h2 class="mi-section-title amber"><i data-lucide="alert-circle"></i> Pending Feedback (<span id="mi-pending-count">0</span>)</h2>
+          <div id="mi-pending-list"></div>
+        </div>
+
+        <div class="mi-section">
+          <h2 class="mi-section-title emerald"><i data-lucide="check-circle-2"></i> Completed (<span id="mi-completed-count">0</span>)</h2>
+          <div id="mi-completed-list"></div>
+        </div>
+      </div>
+
+      <div id="assigned-candidates-view" style="display: none;">
+        <header class="header">
+          <h1>Assigned Candidates</h1>
+          <p>Review candidate profiles to prepare for interviews</p>
+        </header>
+
+        <div class="ac-positions-card">
+          <p class="ac-positions-label">Assigned Positions</p>
+          <div class="ac-positions-list" id="ac-positions-list"></div>
+        </div>
+
+        <div id="ac-candidates-list"></div>
+      </div>
+
+      <div id="submit-feedback-list-view" style="display: none;">
+        <header class="header">
+          <h1>Submit Feedback</h1>
+          <p>Provide ratings and notes for your completed interviews</p>
+        </header>
+
+        <div id="sf-list"></div>
+      </div>
+
+      <div id="submit-feedback-view" style="display: none;">
+        <button class="back-btn" onclick="closeFeedbackPage()">
+          <i data-lucide="arrow-left"></i> <span id="fb-back-label">Back to Interviews</span>
+        </button>
+
+        <header class="header">
+          <h1 id="fb-page-title">Submit Feedback</h1>
+          <p id="fb-page-subtitle"></p>
+        </header>
+
+        <div class="fb-page-card" id="fb-candidate-info"></div>
+
+        <div class="fb-page-card">
+          <h3 class="fb-page-form-title" id="fb-page-form-title">Your Feedback</h3>
+
+          <div class="form-group">
+            <label>Rating *</label>
+            <div class="star-rating-picker" id="fb-page-rating-picker"></div>
+          </div>
+
+          <div class="form-group">
+            <label>Recommendation *</label>
+            <div class="filter-pills" id="fb-page-recommendation-pills"></div>
+          </div>
+
+          <div class="form-group">
+            <label>Comments</label>
+            <textarea id="fb-page-comments" rows="6" placeholder="Strengths, concerns, notes for the hiring decision..."></textarea>
+            <p class="workflow-card-hint" style="margin-top: 6px;">This feedback will be visible to HR Administrators.</p>
+          </div>
+
+          <div class="fb-page-actions">
+            <button class="modal-cancel-btn" onclick="closeFeedbackPage()">Cancel</button>
+            <button class="modal-save-btn" id="fb-page-submit-btn" onclick="submitFeedbackPage()">Submit Feedback</button>
+          </div>
+        </div>
+      </div>
+    </main>
+  </div>
+
+  <div id="modal-root"></div>
+
+  <script src="../assets/js/theme.js"></script>
+  <script src="../assets/js/interviewer.js"></script>
+</body>
+
+</html>

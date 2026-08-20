@@ -1,0 +1,537 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>TalentFlow - Create Account</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <script src="https://unpkg.com/lucide@latest"></script>
+  <script>
+    document.documentElement.setAttribute('data-theme', localStorage.getItem('theme') || 'dark');
+  </script>
+  <style>
+    :root {
+      --bg-page: #0a0a0b;
+      --bg-card: #18181b;
+      --bg-input: #1f1f23;
+      --border-color: rgba(255, 255, 255, 0.08);
+      --border-input: rgba(255, 255, 255, 0.12);
+      --text-main: #f4f4f5;
+      --text-muted: #9ca3af;
+      --text-body: #d4d4d8;
+      --text-dim: #71717a;
+      --accent: #3b82f6;
+      --accent-hover: #2563eb;
+      --accent-light: #60a5fa;
+      --accent-tint-bg: rgba(59, 130, 246, 0.15);
+      --step-title-dim: #52525b;
+      --divider: rgba(255, 255, 255, 0.1);
+      --overlay-subtle: rgba(255, 255, 255, 0.08);
+      --overlay-hover: rgba(255, 255, 255, 0.06);
+      --card-shadow: 0 4px 20px rgba(0, 0, 0, 0.4);
+    }
+    [data-theme="light"] {
+      --bg-page: #F9F9F9;
+      --bg-card: #ffffff;
+      --bg-input: #ffffff;
+      --border-color: #e2e8f0;
+      --border-input: #d1d5db;
+      --text-main: #0f172a;
+      --text-muted: #4b5563;
+      --text-body: #374151;
+      --text-dim: #9ca3af;
+      --accent: #2563eb;
+      --accent-hover: #1d4ed8;
+      --accent-light: #2563eb;
+      --accent-tint-bg: #dbeafe;
+      --step-title-dim: #9ca3af;
+      --divider: #e5e7eb;
+      --overlay-subtle: #f1f5f9;
+      --overlay-hover: #f3f4f6;
+      --card-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+    }
+    * {
+      box-sizing: border-box;
+      font-family: 'Inter', sans-serif;
+    }
+    body {
+      margin: 0;
+      background-color: var(--bg-page);
+      display: flex;
+      min-height: 100vh;
+      transition: background-color 0.2s ease;
+    }
+    .page-wrapper {
+      display: flex;
+      width: 100%;
+      min-height: 100vh;
+    }
+
+    /* Theme Toggle */
+    .theme-toggle-btn {
+      position: fixed;
+      top: 20px;
+      right: 20px;
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      background-color: var(--bg-card);
+      border: 1px solid var(--border-color);
+      color: var(--text-main);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      z-index: 1000;
+    }
+    .theme-toggle-btn svg {
+      width: 18px;
+      height: 18px;
+    }
+
+    /* Left Brand Panel */
+    .left-brand-panel {
+      width: 400px;
+      background: var(--bg-page);
+      border-right: 1px solid var(--border-color);
+      color: var(--text-main);
+      padding: 60px 40px;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+    }
+    .brand-logo-area {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 8px;
+    }
+    .brand-logo-img {
+      width: 100%;
+      max-width: 190px;
+      height: auto;
+      object-fit: contain;
+    }
+    .brand-logo-img.for-light {
+      display: none;
+    }
+    [data-theme="light"] .brand-logo-img.for-dark {
+      display: none;
+    }
+    [data-theme="light"] .brand-logo-img.for-light {
+      display: block;
+    }
+    .brand-label {
+      margin: 0;
+      font-size: 14px;
+      font-weight: 600;
+      letter-spacing: 0.02em;
+      color: var(--text-muted);
+    }
+    .brand-middle h1 {
+      font-size: 32px;
+      line-height: 1.3;
+      margin: 0 0 16px 0;
+      font-weight: 700;
+      color: var(--text-main);
+    }
+    .brand-middle p {
+      color: var(--text-muted);
+      font-size: 15px;
+      line-height: 1.5;
+      margin: 0;
+    }
+    .brand-footer {
+      font-size: 13px;
+      color: var(--text-dim);
+    }
+
+    /* Right Form Panel */
+    .right-form-panel {
+      flex: 1;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      padding: 40px;
+    }
+    .register-container {
+      width: 100%;
+      max-width: 640px;
+      padding: 40px;
+      background: var(--bg-card);
+      border: 1px solid var(--border-color);
+      border-radius: 16px;
+      box-shadow: var(--card-shadow);
+    }
+    .back-link {
+      color: var(--text-muted);
+      text-decoration: none;
+      font-size: 13px;
+      font-weight: 500;
+      display: inline-block;
+      margin-bottom: 20px;
+    }
+    .register-container h2 {
+      margin: 0 0 6px 0;
+      font-size: 26px;
+      color: var(--text-main);
+      font-weight: 700;
+    }
+    .subtitle {
+      color: var(--text-muted);
+      font-size: 15px;
+      margin-bottom: 28px;
+    }
+
+    /* Stepper */
+    .stepper {
+      display: flex;
+      align-items: center;
+      margin-bottom: 32px;
+    }
+    .step {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .step-number {
+      width: 32px;
+      height: 32px;
+      border-radius: 50%;
+      background: var(--overlay-subtle);
+      color: var(--text-muted);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 14px;
+      font-weight: 600;
+    }
+    .step.active .step-number {
+      background: var(--accent);
+      color: white;
+    }
+    .step.completed .step-number {
+      background: var(--accent-tint-bg);
+      color: var(--accent-light);
+    }
+    .step-info {
+      display: flex;
+      flex-direction: column;
+    }
+    .step-title {
+      font-size: 14px;
+      font-weight: 600;
+      color: var(--text-main);
+    }
+    .step-desc {
+      font-size: 12px;
+      color: var(--text-muted);
+    }
+    .step:not(.active):not(.completed) .step-title {
+      color: var(--step-title-dim);
+    }
+    .step-divider {
+      flex: 1;
+      height: 1px;
+      background: var(--divider);
+      margin: 0 16px;
+      transition: background 0.3s;
+    }
+
+    /* Form Fields */
+    .form-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 16px;
+      margin-bottom: 16px;
+    }
+    .form-group {
+      margin-bottom: 16px;
+    }
+    .form-group.full {
+      grid-column: span 2;
+    }
+    label {
+      display: block;
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--text-body);
+      margin-bottom: 6px;
+    }
+    .form-group input {
+      width: 100%;
+      padding: 11px 14px;
+      border: 1px solid var(--border-input);
+      border-radius: 8px;
+      font-size: 14px;
+      outline: none;
+      transition: border-color 0.2s, box-shadow 0.2s;
+      color: var(--text-main);
+      background-color: var(--bg-input);
+    }
+    .form-group input::placeholder {
+      color: var(--text-dim);
+    }
+    .form-group input:focus {
+      border-color: var(--accent);
+      box-shadow: 0 0 0 1px var(--accent);
+    }
+    .input-icon-wrapper {
+      position: relative;
+      display: flex;
+      align-items: center;
+    }
+    .input-icon-wrapper input {
+      padding-left: 42px;
+    }
+    .input-icon-wrapper .left-icon {
+      position: absolute;
+      left: 14px;
+      width: 18px;
+      height: 18px;
+      color: var(--text-dim);
+      pointer-events: none;
+    }
+    .toggle-password {
+      position: absolute;
+      right: 14px;
+      background: none;
+      border: none;
+      cursor: pointer;
+      color: var(--text-dim);
+      padding: 0;
+      display: flex;
+      align-items: center;
+    }
+
+    /* Buttons */
+    .btn-container {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-top: 24px;
+    }
+    .continue-btn {
+      padding: 12px 28px;
+      background: var(--accent);
+      color: white;
+      border: none;
+      border-radius: 8px;
+      font-size: 15px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: background 0.2s;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      margin-left: auto;
+    }
+    .continue-btn:hover {
+      background: var(--accent-hover);
+    }
+    .back-btn {
+      padding: 12px 28px;
+      background: transparent;
+      color: var(--text-body);
+      border: 1px solid var(--border-input);
+      border-radius: 8px;
+      font-size: 15px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: background 0.2s;
+    }
+    .back-btn:hover {
+      background: var(--overlay-hover);
+    }
+
+    .mobile-brand {
+      display: none;
+    }
+
+    @media (max-width: 860px) {
+      .left-brand-panel {
+        display: none;
+      }
+      .right-form-panel {
+        padding: 24px 16px;
+        flex-direction: column;
+      }
+      .mobile-brand {
+        display: flex;
+        justify-content: center;
+        margin-bottom: 20px;
+      }
+    }
+
+    @media (max-width: 480px) {
+      .register-container {
+        padding: 24px 20px;
+      }
+      .theme-toggle-btn {
+        top: 16px;
+        right: 16px;
+      }
+      .form-grid {
+        grid-template-columns: 1fr;
+      }
+      .form-group.full {
+        grid-column: span 1;
+      }
+      .stepper {
+        align-items: flex-start;
+      }
+      .step-desc {
+        display: none;
+      }
+      .step-divider {
+        margin: 0 8px;
+        align-self: center;
+      }
+      .btn-container {
+        flex-wrap: wrap;
+        gap: 10px;
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <button class="theme-toggle-btn" onclick="toggleTheme()" title="Toggle theme">
+    <i id="theme-toggle-icon" data-lucide="sun"></i>
+  </button>
+
+  <div class="page-wrapper">
+    <div class="left-brand-panel">
+      <div class="brand-logo-area">
+        <img src="../images/Altrium-logo-1.png" alt="Altrium logo" class="brand-logo-img for-light">
+        <img src="../images/Altrium-logo-white.png" alt="Altrium logo" class="brand-logo-img for-dark">
+        <span class="brand-label">Candidate</span>
+      </div>
+      <div class="brand-middle">
+        <h1>Start your journey with top companies.</h1>
+        <p>Create your candidate profile, upload your resume, and track your job applications all in one place.</p>
+      </div>
+      <div class="brand-footer">
+        &copy; 2026 TalentFlow Inc. All rights reserved.
+      </div>
+    </div>
+
+    <div class="right-form-panel">
+      <div class="mobile-brand">
+        <img src="../images/Altrium-logo-1.png" alt="Altrium logo" class="brand-logo-img for-light">
+        <img src="../images/Altrium-logo-white.png" alt="Altrium logo" class="brand-logo-img for-dark">
+      </div>
+      <div class="register-container">
+        <a href="Candidate_login.html" class="back-link">&larr; Back to login</a>
+
+        <h2>Create your account</h2>
+        <div class="subtitle">Register as a Candidate to start applying</div>
+
+        <div class="stepper">
+          <div class="step active" id="stepper-1">
+            <div class="step-number" id="step-icon-1">1</div>
+            <div class="step-info">
+              <span class="step-title">Account</span>
+              <span class="step-desc">Create your credentials</span>
+            </div>
+          </div>
+          <div class="step-divider" id="divider-1"></div>
+          <div class="step" id="stepper-2">
+            <div class="step-number">2</div>
+            <div class="step-info">
+              <span class="step-title">Profile</span>
+              <span class="step-desc">Tell us about yourself</span>
+            </div>
+          </div>
+        </div>
+
+        <form>
+          <!-- STEP 1 CONTENT -->
+          <div id="step-1-content">
+            <div class="form-grid">
+              <div class="form-group">
+                <label>First Name *</label>
+                <input type="text" id="reg-fname" placeholder="John">
+              </div>
+              <div class="form-group">
+                <label>Last Name *</label>
+                <input type="text" id="reg-lname" placeholder="Smith">
+              </div>
+            </div>
+
+            <div class="form-group full">
+              <label>Email Address *</label>
+              <div class="input-icon-wrapper">
+                <i data-lucide="mail" class="left-icon"></i>
+                <input type="email" id="reg-email" placeholder="john.smith@example.com">
+              </div>
+            </div>
+
+            <div class="form-group full">
+              <label>Password *</label>
+              <div class="input-icon-wrapper">
+                <i data-lucide="lock" class="left-icon"></i>
+                <input type="password" id="reg-password" placeholder="Minimum 6 characters">
+                <button type="button" class="toggle-password">
+                  <i data-lucide="eye"></i>
+                </button>
+              </div>
+            </div>
+
+            <div class="form-group full">
+              <label>Confirm Password *</label>
+              <div class="input-icon-wrapper">
+                <i data-lucide="lock" class="left-icon"></i>
+                <input type="password" placeholder="Re-enter your password">
+              </div>
+            </div>
+
+            <div class="btn-container">
+              <button type="button" class="continue-btn" onclick="goToStep(2)">
+                Continue <i data-lucide="chevron-right" style="width: 18px; height: 18px;"></i>
+              </button>
+            </div>
+          </div>
+
+          <!-- STEP 2 CONTENT -->
+          <div id="step-2-content" style="display: none;">
+            <div class="form-group full">
+              <label>Phone Number</label>
+              <input type="text" id="reg-phone" placeholder="+1 (555) 123-4567">
+            </div>
+
+            <div class="form-group full">
+              <label>Location</label>
+              <input type="text" id="reg-location" placeholder="San Francisco, CA">
+            </div>
+
+            <div class="form-group full">
+              <label>LinkedIn Profile</label>
+              <input type="text" id="reg-linkedin" placeholder="https://linkedin.com/in/yourprofile">
+            </div>
+
+            <div class="form-group full">
+              <label>Professional Headline</label>
+              <input type="text" id="reg-headline" placeholder="e.g., Senior Software Engineer with 5+ years experience">
+            </div>
+
+            <div class="btn-container">
+              <button type="button" class="back-btn" onclick="goToStep(1)">Back</button>
+              <!-- Calls submitRegistration() instead of redirecting directly -->
+              <button type="button" class="continue-btn" onclick="submitRegistration()">
+                Continue to Job Board <i data-lucide="chevron-right" style="width: 18px; height: 18px;"></i>
+              </button>
+            </div>
+          </div>
+        </form>
+
+      </div>
+    </div>
+  </div>
+
+  <script src="../assets/js/theme.js"></script>
+  <script src="../assets/js/register.js"></script>
+</body>
+</html>

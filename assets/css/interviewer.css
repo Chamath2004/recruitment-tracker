@@ -1,0 +1,443 @@
+/* ================= MY INTERVIEWS ================= */
+
+.mi-section {
+  margin-bottom: 28px;
+}
+
+.mi-section-title {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text-body);
+  margin-bottom: 12px;
+}
+
+.mi-section-title svg {
+  width: 15px;
+  height: 15px;
+  color: var(--badge-blue-text);
+}
+
+.mi-section-title.amber svg {
+  color: var(--warning-text);
+}
+
+.mi-section-title.emerald svg {
+  color: var(--badge-green-text);
+}
+
+.mi-card {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  flex-wrap: wrap;
+  background-color: var(--bg-card);
+  border: 1px solid var(--border-color);
+  border-radius: 12px;
+  padding: 20px;
+  margin-bottom: 12px;
+  transition: box-shadow 0.15s ease;
+}
+
+.mi-card:hover {
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.12);
+}
+
+.mi-card.pending {
+  border-color: rgba(245, 158, 11, 0.4);
+}
+
+.mi-card.completed {
+  opacity: 0.75;
+}
+
+.mi-card.sf-clickable {
+  cursor: pointer;
+}
+
+.mi-card-left {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.mi-avatar {
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 14px;
+  font-weight: 700;
+  flex-shrink: 0;
+}
+
+.mi-avatar svg {
+  width: 20px;
+  height: 20px;
+}
+
+.mi-avatar.blue {
+  background-color: var(--badge-blue-bg);
+  color: var(--badge-blue-text);
+}
+
+.mi-avatar.amber {
+  background-color: var(--warning-bg);
+  color: var(--warning-text);
+}
+
+.mi-avatar.emerald {
+  background-color: var(--badge-green-bg);
+  color: var(--badge-green-text);
+}
+
+.mi-card-name {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--text-main);
+}
+
+.mi-card-sub {
+  font-size: 12px;
+  color: var(--text-muted);
+  margin-top: 1px;
+}
+
+.mi-card-sub2 {
+  font-size: 12px;
+  color: var(--text-dim);
+  margin-top: 2px;
+}
+
+.mi-card-sub2.amber {
+  color: var(--warning-text);
+  font-weight: 500;
+}
+
+.mi-card-right {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.mi-datetime {
+  text-align: right;
+}
+
+.mi-datetime-date {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 6px;
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--text-main);
+}
+
+.mi-datetime-time {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 6px;
+  font-size: 12px;
+  color: var(--text-muted);
+  margin-top: 2px;
+}
+
+.mi-datetime-date svg,
+.mi-datetime-time svg {
+  width: 12px;
+  height: 12px;
+}
+
+.mi-view-edit-link {
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--text-muted);
+  text-decoration: none;
+  background: none;
+  border: none;
+  cursor: pointer;
+}
+
+.mi-view-edit-link:hover {
+  color: var(--text-main);
+}
+
+.mi-feedback-submitted {
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--badge-green-text);
+}
+
+/* ================= ASSIGNED CANDIDATES ================= */
+
+.ac-positions-card {
+  background-color: var(--bg-card);
+  border: 1px solid var(--border-color);
+  border-radius: 12px;
+  padding: 16px 20px;
+  margin-bottom: 20px;
+}
+
+.ac-positions-label {
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  margin-bottom: 8px;
+}
+
+.ac-positions-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.ac-position-pill {
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--badge-blue-text);
+  background-color: var(--badge-blue-bg);
+  padding: 6px 12px;
+  border-radius: 999px;
+}
+
+.ac-card {
+  background-color: var(--bg-card);
+  border: 1px solid var(--border-color);
+  border-radius: 12px;
+  overflow: hidden;
+  margin-bottom: 16px;
+}
+
+.ac-card-top {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+  flex-wrap: wrap;
+  padding: 20px;
+}
+
+.ac-card-left {
+  display: flex;
+  align-items: flex-start;
+  gap: 14px;
+}
+
+.ac-avatar {
+  width: 52px;
+  height: 52px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 16px;
+  font-weight: 700;
+  flex-shrink: 0;
+  background: linear-gradient(135deg, var(--badge-blue-bg), var(--badge-green-bg));
+  color: var(--badge-blue-text);
+}
+
+.ac-card-name {
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--text-main);
+}
+
+.ac-card-role {
+  font-size: 13px;
+  color: var(--text-muted);
+  margin-top: 1px;
+}
+
+.ac-card-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-top: 8px;
+  font-size: 12px;
+  color: var(--text-dim);
+}
+
+.ac-card-meta span,
+.ac-card-meta a {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  color: var(--text-dim);
+  text-decoration: none;
+}
+
+.ac-card-meta a:hover {
+  color: var(--badge-blue-text);
+}
+
+.ac-card-meta svg {
+  width: 12px;
+  height: 12px;
+}
+
+.ac-card-right {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 10px;
+  text-align: right;
+}
+
+.ac-interviews-label {
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--text-muted);
+  margin-bottom: 2px;
+}
+
+.ac-interviews-item {
+  font-size: 12px;
+  color: var(--text-dim);
+  margin-top: 1px;
+}
+
+.ac-cv-strip {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 10px;
+  background-color: var(--bg-sidebar-hover);
+  border-top: 1px solid var(--border-color);
+  padding: 12px 20px;
+}
+
+.ac-cv-strip-label {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text-body);
+}
+
+.ac-cv-strip-label svg {
+  width: 14px;
+  height: 14px;
+  color: var(--text-dim);
+}
+
+.ac-cv-strip-empty {
+  font-size: 12px;
+  color: var(--text-dim);
+  font-style: italic;
+}
+
+.ac-cv-strip-actions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.ac-cv-filename {
+  font-size: 12px;
+  color: var(--text-muted);
+}
+
+.ac-cv-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 12px;
+  font-weight: 600;
+  padding: 6px 12px;
+  border-radius: 8px;
+  text-decoration: none;
+  color: var(--text-body);
+  background-color: var(--bg-card);
+  border: 1px solid var(--border-color);
+}
+
+.ac-cv-btn:hover {
+  background-color: var(--bg-sidebar-hover);
+}
+
+.ac-cv-btn.primary {
+  color: var(--badge-blue-text);
+  background-color: var(--badge-blue-bg);
+  border-color: transparent;
+}
+
+.ac-cv-btn.primary:hover {
+  opacity: 0.85;
+}
+
+.ac-cv-btn svg {
+  width: 12px;
+  height: 12px;
+}
+
+/* ================= SUBMIT FEEDBACK PAGE ================= */
+
+.fb-page-card {
+  background-color: var(--bg-card);
+  border: 1px solid var(--border-color);
+  border-radius: 12px;
+  padding: 20px;
+  margin-bottom: 16px;
+}
+
+.fb-page-form-title {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--text-main);
+  margin-bottom: 16px;
+}
+
+.fb-page-card .form-group {
+  margin-bottom: 16px;
+}
+
+.fb-page-card .form-group:last-of-type {
+  margin-bottom: 0;
+}
+
+.fb-page-card textarea {
+  width: 100%;
+  padding: 10px 14px;
+  border: 1px solid var(--border-color);
+  border-radius: 8px;
+  font-size: 14px;
+  outline: none;
+  background-color: var(--bg-input);
+  color: var(--text-main);
+  font-family: inherit;
+  resize: vertical;
+}
+
+.fb-page-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  margin-top: 20px;
+}
+
+.ac-empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+}
+
+.ac-empty svg {
+  width: 32px;
+  height: 32px;
+  color: var(--text-dim);
+  opacity: 0.5;
+}
