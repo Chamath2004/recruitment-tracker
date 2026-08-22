@@ -16,11 +16,11 @@ if ($conn->connect_error) {
 }
 
 $applications = [];
-$result = $conn->query("SELECT id, candidate_id, full_name, email, job_title, status, created_at FROM applications WHERE shortlisted = 1 ORDER BY created_at DESC");
+$result = $conn->query("SELECT id, full_name, email, phone, linkedin, job_title, status, shortlisted, resume_name, created_at FROM applications ORDER BY created_at DESC");
 if ($result) {
     while ($row = $result->fetch_assoc()) {
         $row['id'] = (int) $row['id'];
-        $row['candidate_id'] = (int) $row['candidate_id'];
+        $row['shortlisted'] = (bool) $row['shortlisted'];
         $applications[] = $row;
     }
 }

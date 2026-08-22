@@ -1,0 +1,447 @@
+/* ================= HIRING MANAGER: SHARED CONTROLS ================= */
+.hm-select {
+  padding: 10px 14px;
+  border: 1px solid var(--border-color);
+  border-radius: 8px;
+  font-size: 14px;
+  outline: none;
+  background-color: var(--bg-input);
+  color: var(--text-main);
+  font-family: inherit;
+  cursor: pointer;
+}
+
+/* ================= KANBAN BOARD ================= */
+.kanban-board {
+  display: flex;
+  gap: 16px;
+  overflow-x: auto;
+  padding-bottom: 8px;
+}
+
+.kanban-column {
+  flex: 0 0 280px;
+  width: 280px;
+}
+
+.kanban-column-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 10px;
+  padding: 0 2px;
+}
+
+.kanban-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  flex-shrink: 0;
+  background-color: var(--badge-gray-text);
+}
+
+.kanban-dot.submitted { background-color: #a1a1aa; }
+.kanban-dot.in-review { background-color: #60a5fa; }
+.kanban-dot.interview { background-color: #c4b5fd; }
+.kanban-dot.offer { background-color: #fbbf24; }
+.kanban-dot.hired { background-color: #34d399; }
+.kanban-dot.rejected { background-color: #f87171; }
+
+.kanban-column-title {
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--text-body, var(--text-main));
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.kanban-column-count {
+  font-size: 10px;
+  font-weight: 600;
+  color: var(--text-dim);
+  background-color: var(--badge-gray-bg);
+  padding: 1px 7px;
+  border-radius: 999px;
+  margin-left: auto;
+}
+
+.kanban-column-body {
+  background-color: var(--hover-bg-card);
+  border: 2px dashed transparent;
+  border-radius: 12px;
+  padding: 8px;
+  min-height: 160px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  transition: border-color 0.15s ease;
+}
+
+.kanban-column-body.drag-over {
+  border-color: var(--border-color);
+}
+
+.kanban-card {
+  background-color: var(--bg-card);
+  border: 1px solid var(--border-color);
+  border-radius: 10px;
+  padding: 12px;
+  cursor: grab;
+  transition: box-shadow 0.15s ease, opacity 0.15s ease;
+}
+
+.kanban-card:hover {
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.12);
+}
+
+.kanban-card.dragging {
+  opacity: 0.4;
+}
+
+.kanban-card-name {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text-main);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.kanban-card-sub {
+  font-size: 12px;
+  color: var(--text-muted);
+  margin-top: 2px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.kanban-card-date {
+  font-size: 11px;
+  color: var(--text-dim);
+  margin-top: 8px;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.kanban-card-date svg {
+  width: 11px;
+  height: 11px;
+}
+
+.kanban-empty {
+  padding: 24px 4px;
+  text-align: center;
+  font-size: 12px;
+  color: var(--text-dim);
+  font-style: italic;
+}
+
+/* ================= CANDIDATE / DECISION CARDS ================= */
+.hm-card {
+  background-color: var(--bg-card);
+  border: 1px solid var(--border-color);
+  border-radius: 14px;
+  overflow: hidden;
+  margin-bottom: 14px;
+  transition: border-color 0.15s ease;
+}
+
+.hm-card.decided-hired {
+  border-color: rgba(16, 185, 129, 0.4);
+}
+
+.hm-card.decided-rejected {
+  border-color: rgba(239, 68, 68, 0.4);
+}
+
+.hm-card-body {
+  padding: 18px 20px;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.hm-card-left {
+  display: flex;
+  align-items: flex-start;
+  gap: 14px;
+  flex: 1;
+  min-width: 220px;
+}
+
+.hm-card-avatar {
+  width: 46px;
+  height: 46px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, var(--avatar-grad-1), var(--avatar-grad-2));
+  color: var(--avatar-text);
+  font-size: 15px;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.hm-card-name-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.hm-card-name {
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--text-main);
+}
+
+.hm-card-role {
+  font-size: 13px;
+  color: var(--text-muted);
+  margin-top: 2px;
+}
+
+.hm-card-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-top: 6px;
+  font-size: 12px;
+  color: var(--text-dim);
+}
+
+.hm-card-meta span,
+.hm-card-meta a {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  color: inherit;
+  text-decoration: none;
+}
+
+.hm-card-meta svg {
+  width: 12px;
+  height: 12px;
+}
+
+.hm-card-right {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 8px;
+}
+
+.hm-card-scores {
+  display: flex;
+  align-items: center;
+  gap: 18px;
+}
+
+.hm-score {
+  text-align: center;
+}
+
+.hm-score-value {
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--text-main);
+}
+
+.hm-score-value.emerald {
+  color: #34d399;
+}
+
+.hm-score-label {
+  font-size: 10px;
+  color: var(--text-dim);
+  margin-top: 2px;
+}
+
+.hm-actions {
+  display: flex;
+  gap: 8px;
+}
+
+.hm-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 12px;
+  font-weight: 600;
+  padding: 7px 12px;
+  border-radius: 8px;
+  border: none;
+  cursor: pointer;
+  transition: background-color 0.15s ease;
+}
+
+.hm-btn svg {
+  width: 13px;
+  height: 13px;
+}
+
+.hm-btn-reject {
+  background-color: rgba(239, 68, 68, 0.12);
+  color: #f87171;
+}
+
+.hm-btn-reject:hover {
+  background-color: rgba(239, 68, 68, 0.22);
+}
+
+.hm-btn-approve {
+  background-color: #059669;
+  color: #ffffff;
+}
+
+.hm-btn-approve:hover {
+  background-color: #047857;
+}
+
+.hm-btn-neutral {
+  background-color: var(--badge-gray-bg);
+  color: var(--text-muted);
+}
+
+.hm-btn-neutral:hover {
+  background-color: var(--hover-bg-card);
+}
+
+.hm-decision-tag {
+  font-size: 11px;
+  font-weight: 600;
+  padding: 5px 12px;
+  border-radius: 999px;
+}
+
+.hm-decision-tag.hired {
+  background-color: rgba(16, 185, 129, 0.15);
+  color: #34d399;
+}
+
+.hm-decision-tag.rejected {
+  background-color: rgba(239, 68, 68, 0.15);
+  color: #f87171;
+}
+
+.hm-feedback-section {
+  border-top: 1px solid var(--border-color);
+  padding: 14px 20px 18px;
+}
+
+.hm-feedback-section-title {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text-body, var(--text-main));
+  margin-bottom: 8px;
+}
+
+.hm-feedback-chip {
+  font-size: 12px;
+  color: var(--text-muted);
+  background-color: var(--hover-bg-card);
+  padding: 8px 10px;
+  border-radius: 8px;
+  margin-bottom: 6px;
+}
+
+.hm-feedback-chip strong {
+  color: var(--text-main);
+}
+
+/* ================= REVIEW FEEDBACK ================= */
+.hm-feedback-header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 14px 20px;
+  border-bottom: 1px solid var(--border-color);
+  background-color: var(--hover-bg-card);
+}
+
+.hm-feedback-header-body {
+  flex: 1;
+  min-width: 0;
+}
+
+.hm-feedback-header-name {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--text-main);
+}
+
+.hm-feedback-header-sub {
+  font-size: 12px;
+  color: var(--text-muted);
+}
+
+.hm-feedback-item {
+  padding: 16px 20px;
+  border-bottom: 1px solid var(--border-color);
+}
+
+.hm-feedback-item:last-child {
+  border-bottom: none;
+}
+
+.hm-feedback-item-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 6px;
+}
+
+.hm-feedback-item-name {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text-main);
+}
+
+.hm-feedback-notes {
+  font-size: 13px;
+  color: var(--text-body, var(--text-muted));
+  line-height: 1.5;
+}
+
+.hm-empty-state {
+  text-align: center;
+  padding: 60px 20px;
+  background-color: var(--bg-card);
+  border: 1px solid var(--border-color);
+  border-radius: 14px;
+  color: var(--text-dim);
+  font-size: 13px;
+}
+
+.hm-empty-state svg {
+  width: 34px;
+  height: 34px;
+  color: var(--text-dim);
+  margin-bottom: 10px;
+}
+
+@media (max-width: 640px) {
+  .hm-card-body {
+    flex-direction: column;
+  }
+
+  .hm-card-right {
+    align-items: flex-start;
+    width: 100%;
+  }
+
+  .hm-actions {
+    width: 100%;
+  }
+
+  .hm-btn {
+    flex: 1;
+    justify-content: center;
+  }
+}

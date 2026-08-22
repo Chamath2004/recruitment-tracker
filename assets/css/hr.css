@@ -220,6 +220,16 @@
   color: #f87171;
 }
 
+.stage-pill.hired {
+  background-color: rgba(16, 185, 129, 0.15);
+  color: #34d399;
+}
+
+[data-theme="light"] .stage-pill.hired {
+  background-color: #d1fae5;
+  color: #047857;
+}
+
 /* ================= DATA TABLE ================= */
 .table-wrap {
   overflow-x: auto;
@@ -255,6 +265,63 @@
   font-size: 12px;
   color: var(--text-muted);
   margin-top: 2px;
+}
+
+.candidate-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.candidate-action-btn {
+  display: inline-flex;
+  align-items: center;
+  padding: 6px 10px;
+  border-radius: 6px;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  border: 1px solid var(--border-color);
+  background-color: var(--bg-card);
+  color: var(--text-main);
+  text-decoration: none;
+  white-space: nowrap;
+  transition: all 0.15s ease;
+}
+
+.candidate-action-btn:hover {
+  background-color: var(--hover-bg-card);
+}
+
+.candidate-action-btn.shortlist {
+  border-color: var(--primary-green);
+  color: var(--primary-green);
+}
+
+.candidate-action-btn.shortlist:hover {
+  background-color: var(--primary-green);
+  color: white;
+}
+
+.candidate-action-btn.reject {
+  border-color: #ef4444;
+  color: #ef4444;
+}
+
+.candidate-action-btn.reject:hover {
+  background-color: #ef4444;
+  color: white;
+}
+
+.candidate-action-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.candidate-action-btn:disabled:hover {
+  background-color: var(--bg-card);
+  color: var(--text-main);
 }
 
 .active-pill {

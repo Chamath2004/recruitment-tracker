@@ -93,12 +93,30 @@
       <div class="search-container">
         <div class="search-input-wrapper">
           <i data-lucide="search" class="search-icon"></i>
-          <input type="text" placeholder="Search by keyword, title, or description...">
+          <input type="text" id="job-search-input" placeholder="Search by keyword, title, or description...">
         </div>
-        <button class="filter-btn">
-          <i data-lucide="sliders-horizontal"></i>
-          <span>Filters</span>
-        </button>
+        <div class="filter-wrapper">
+          <button class="filter-btn" id="filter-toggle-btn" onclick="toggleFilterDropdown()">
+            <i data-lucide="sliders-horizontal"></i>
+            <span>Filters</span>
+            <span class="filter-count-badge" id="filter-count-badge" style="display:none;"></span>
+          </button>
+          <div class="filter-dropdown" id="filter-dropdown" style="display:none;">
+            <div class="filter-group">
+              <label>Category</label>
+              <select id="filter-category-select">
+                <option value="">All Categories</option>
+              </select>
+            </div>
+            <div class="filter-group">
+              <label>Job Type</label>
+              <select id="filter-type-select">
+                <option value="">All Types</option>
+              </select>
+            </div>
+            <button class="filter-clear-btn" id="filter-clear-btn" onclick="clearJobFilters()">Clear filters</button>
+          </div>
+        </div>
       </div>
 
       <div class="results-count"><span id="job-count">5</span> open positions</div>

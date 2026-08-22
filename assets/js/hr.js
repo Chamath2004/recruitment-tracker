@@ -47,6 +47,7 @@ function switchHrView(navEl, view, label) {
 
   document.getElementById('overview-view').style.display = view === 'overview' ? 'block' : 'none';
   document.getElementById('vacancies-view').style.display = view === 'vacancies' ? 'block' : 'none';
+  document.getElementById('manage-candidates-view').style.display = view === 'manage-candidates' ? 'block' : 'none';
   document.getElementById('workflows-view').style.display = view === 'workflows' ? 'block' : 'none';
   document.getElementById('interviews-view').style.display = view === 'interviews' ? 'block' : 'none';
   document.getElementById('access-view').style.display = view === 'access' ? 'block' : 'none';
@@ -58,6 +59,8 @@ function switchHrView(navEl, view, label) {
     document.getElementById('placeholder-title').textContent = label;
   } else if (view === 'vacancies') {
     loadVacancies();
+  } else if (view === 'manage-candidates') {
+    loadManageCandidates();
   } else if (view === 'workflows') {
     loadHiringWorkflows();
   } else if (view === 'interviews') {
@@ -102,6 +105,7 @@ function stagePillClass(status) {
     'in-review': 'in-review',
     interview: 'interview',
     offer: 'offer',
+    hired: 'hired',
     rejected: 'rejected'
   };
   return map[status] || 'submitted';
@@ -113,6 +117,7 @@ function stageLabel(status) {
     'in-review': 'In Review',
     interview: 'Interview',
     offer: 'Offer',
+    hired: 'Hired',
     rejected: 'Rejected'
   };
   return map[status] || status;
@@ -422,6 +427,100 @@ function saveVacancy(id) {
       loadVacancies();
     })
     .catch(error => console.error('Error saving vacancy:', error));
+}
+
+// ================= MANAGE CANDIDATES =================
+
+let manageCandidatesList = [];
+let candidateFilter = 'all';
+
+function loadManageCandidates() {
+  fetch('../api/get_manage_candidates.php')
+    .then(response => response.json())
+    .then(result => {
+      if (!result.success) return;
+      manageCandidatesList = result.data;
+      renderManageCandidatesTable();
+    })
+    .catch(error => console.error('Error loading candidates:', error));
+}
+
+function setCandidateFilter(filter) {
+  candidateFilter = filter;
+  document.querySelectorAll('#candidate-filter-pills .filter-pill').forEach(btn => {
+    btn.classList.toggle('active', btn.dataset.filter === filter);
+  });
+  renderManageCandidatesTable();
+}
+
+function renderManageCandidatesTable() {
+  const tbody = document.getElementById('manage-candidates-table-body');
+  const searchTerm = document.getElementById('candidate-search-input').value.toLowerCase();
+
+  const filtered = manageCandidatesList.filter(c => {
+    const matchesSearch = !searchTerm ||
+      (c.full_name || '').toLowerCase().includes(searchTerm) ||
+      (c.email || '').toLowerCase().includes(searchTerm) ||
+      (c.job_title || '').toLowerCase().includes(searchTerm);
+
+    const matchesFilter =
+      candidateFilter === 'all' ? true :
+      candidateFilter === 'shortlisted' ? c.shortlisted :
+      candidateFilter === 'rejected' ? c.status === 'rejected' :
+      candidateFilter === 'pending' ? (!c.shortlisted && c.status !== 'rejected') :
+      true;
+
+    return matchesSearch && matchesFilter;
+  });
+
+  if (filtered.length === 0) {
+    tbody.innerHTML = `<tr><td colspan="6" class="panel-empty">No candidates match this view.</td></tr>`;
+    return;
+  }
+
+  tbody.innerHTML = filtered.map(c => {
+    const name = c.full_name && c.full_name.trim() ? c.full_name : c.email;
+    const isRejected = c.status === 'rejected';
+
+    return `
+      <tr>
+        <td>
+          ${name}
+          <div class="cell-sub">${c.email}</div>
+        </td>
+        <td>${c.job_title}</td>
+        <td>${(c.created_at || '').split(' ')[0]}</td>
+        <td><span class="stage-pill ${stagePillClass(c.status)}">${stageLabel(c.status)}</span></td>
+        <td><span class="stage-pill ${c.shortlisted ? 'hired' : 'submitted'}">${c.shortlisted ? 'Shortlisted' : 'Not shortlisted'}</span></td>
+        <td>
+          <div class="candidate-actions">
+            ${c.resume_name ? `<a class="candidate-action-btn" href="../api/download_resume.php?application_id=${c.id}&mode=view" target="_blank" rel="noopener noreferrer">Resume</a>` : ''}
+            ${c.shortlisted
+              ? `<button class="candidate-action-btn" onclick="reviewCandidate(${c.id}, 'unshortlist')">Un-shortlist</button>`
+              : `<button class="candidate-action-btn shortlist" onclick="reviewCandidate(${c.id}, 'shortlist')" ${isRejected ? 'disabled' : ''}>Shortlist</button>`}
+            ${!isRejected ? `<button class="candidate-action-btn reject" onclick="reviewCandidate(${c.id}, 'reject')">Reject</button>` : ''}
+          </div>
+        </td>
+      </tr>
+    `;
+  }).join('');
+}
+
+function reviewCandidate(applicationId, action) {
+  fetch('../api/update_candidate_review.php', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ application_id: applicationId, action: action })
+  })
+    .then(response => response.json())
+    .then(result => {
+      if (!result.success) {
+        alert(result.message || 'Failed to update candidate.');
+        return;
+      }
+      loadManageCandidates();
+    })
+    .catch(error => console.error('Error updating candidate:', error));
 }
 
 // ================= HIRING WORKFLOWS =================
@@ -1511,9 +1610,12 @@ function setAccessTab(tab) {
   });
   document.getElementById('access-hr-users-section').style.display = tab === 'hr' ? 'block' : 'none';
   document.getElementById('access-interviewers-section').style.display = tab === 'interviewers' ? 'block' : 'none';
+  document.getElementById('access-hiring-managers-section').style.display = tab === 'hiring-managers' ? 'block' : 'none';
 
   if (tab === 'interviewers') {
     loadInterviewersList();
+  } else if (tab === 'hiring-managers') {
+    loadHiringManagersList();
   }
 }
 
@@ -1688,6 +1790,179 @@ function runDeleteInterviewer(id) {
       loadInterviewersList();
     })
     .catch(error => console.error('Error deleting interviewer:', error));
+}
+
+let hiringManagerList = [];
+
+function loadHiringManagersList() {
+  fetch('../api/get_hiring_managers.php')
+    .then(response => response.json())
+    .then(result => {
+      if (!result.success) {
+        document.getElementById('hiring-managers-table-body').innerHTML =
+          `<tr><td colspan="4" class="panel-empty">${result.message || 'Unable to load hiring managers.'}</td></tr>`;
+        return;
+      }
+      hiringManagerList = result.data;
+      renderHiringManagersTable();
+    })
+    .catch(error => console.error('Error loading hiring managers:', error));
+}
+
+function renderHiringManagersTable() {
+  const tbody = document.getElementById('hiring-managers-table-body');
+
+  if (hiringManagerList.length === 0) {
+    tbody.innerHTML = `<tr><td colspan="4" class="panel-empty">No hiring managers found.</td></tr>`;
+    return;
+  }
+
+  tbody.innerHTML = hiringManagerList.map(hm => {
+    const fullName = `${hm.first_name} ${hm.last_name}`.trim();
+    return `
+      <tr>
+        <td>${fullName}</td>
+        <td>${hm.email}</td>
+        <td>${hm.department || '—'}</td>
+        <td>
+          <div class="vacancy-card-actions">
+            <button title="Edit" onclick="openHiringManagerModal(${hm.id})"><i data-lucide="edit-3"></i></button>
+            <button title="Remove access" onclick="confirmDeleteHiringManager(${hm.id})"><i data-lucide="trash-2"></i></button>
+          </div>
+        </td>
+      </tr>
+    `;
+  }).join('');
+
+  lucide.createIcons();
+}
+
+function openHiringManagerModal(id) {
+  const hiringManager = id ? hiringManagerList.find(hm => hm.id === id) : null;
+
+  const modalHtml = `
+    <div class="modal-overlay" id="hiring-manager-modal-overlay" onclick="if(event.target===this) closeHiringManagerModal()">
+      <div class="modal-dialog">
+        <div class="modal-header">
+          <h2>${hiringManager ? 'Edit Hiring Manager' : 'Add Hiring Manager'}</h2>
+          <button class="modal-close-btn" onclick="closeHiringManagerModal()"><i data-lucide="x"></i></button>
+        </div>
+        <div class="modal-body">
+          <div class="form-grid-2">
+            <div class="form-group">
+              <label>First Name *</label>
+              <input type="text" id="hm-first-name" value="${hiringManager ? hiringManager.first_name : ''}" placeholder="e.g., Nadia">
+            </div>
+            <div class="form-group">
+              <label>Last Name *</label>
+              <input type="text" id="hm-last-name" value="${hiringManager ? hiringManager.last_name : ''}" placeholder="Fernando">
+            </div>
+          </div>
+          <div class="form-group">
+            <label>Email *</label>
+            <input type="email" id="hm-email" value="${hiringManager ? hiringManager.email : ''}" placeholder="nadia@company.com">
+          </div>
+          <div class="form-group">
+            <label>Department</label>
+            <input type="text" id="hm-department" value="${hiringManager ? hiringManager.department || '' : ''}" placeholder="Engineering">
+          </div>
+          <div class="form-group">
+            <label>${hiringManager ? 'New Password' : 'Password *'}</label>
+            <input type="password" id="hm-password" placeholder="${hiringManager ? 'Leave blank to keep current password' : 'At least 8 characters'}">
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button class="modal-cancel-btn" onclick="closeHiringManagerModal()">Cancel</button>
+          <button class="modal-save-btn" onclick="saveHiringManager(${hiringManager ? hiringManager.id : 'null'})">${hiringManager ? 'Save Changes' : 'Add Hiring Manager'}</button>
+        </div>
+      </div>
+    </div>
+  `;
+
+  document.getElementById('modal-root').innerHTML = modalHtml;
+  lucide.createIcons();
+}
+
+function closeHiringManagerModal() {
+  document.getElementById('modal-root').innerHTML = '';
+}
+
+function saveHiringManager(id) {
+  const payload = {
+    id: id || 0,
+    first_name: document.getElementById('hm-first-name').value.trim(),
+    last_name: document.getElementById('hm-last-name').value.trim(),
+    email: document.getElementById('hm-email').value.trim(),
+    department: document.getElementById('hm-department').value.trim(),
+    password: document.getElementById('hm-password').value
+  };
+
+  if (!payload.first_name || !payload.last_name || !payload.email) {
+    alert('First name, last name, and email are required.');
+    return;
+  }
+
+  fetch('../api/save_hiring_manager.php', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(payload)
+  })
+    .then(response => response.json())
+    .then(result => {
+      if (!result.success) {
+        alert(result.message || 'Failed to save hiring manager.');
+        return;
+      }
+      closeHiringManagerModal();
+      loadHiringManagersList();
+    })
+    .catch(error => console.error('Error saving hiring manager:', error));
+}
+
+function confirmDeleteHiringManager(id) {
+  const hiringManager = hiringManagerList.find(hm => hm.id === id);
+  if (!hiringManager) return;
+
+  const fullName = `${hiringManager.first_name} ${hiringManager.last_name}`.trim();
+
+  const modalHtml = `
+    <div class="modal-overlay" id="confirm-modal-overlay" onclick="if(event.target===this) closeConfirmModal()">
+      <div class="modal-dialog confirm-modal-dialog">
+        <div class="modal-header">
+          <h2>Remove Access</h2>
+          <button class="modal-close-btn" onclick="closeConfirmModal()"><i data-lucide="x"></i></button>
+        </div>
+        <div class="modal-body">
+          <p class="confirm-modal-message">Are you sure you want to remove <strong>${fullName}</strong>'s hiring manager access? They won't be able to sign in anymore.</p>
+        </div>
+        <div class="modal-footer">
+          <button class="modal-cancel-btn" onclick="closeConfirmModal()">Cancel</button>
+          <button class="modal-save-btn" onclick="runDeleteHiringManager(${id})">Remove Access</button>
+        </div>
+      </div>
+    </div>
+  `;
+
+  document.getElementById('modal-root').innerHTML = modalHtml;
+  lucide.createIcons();
+}
+
+function runDeleteHiringManager(id) {
+  fetch('../api/delete_hiring_manager.php', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ id })
+  })
+    .then(response => response.json())
+    .then(result => {
+      closeConfirmModal();
+      if (!result.success) {
+        alert(result.message || 'Failed to remove access.');
+        return;
+      }
+      loadHiringManagersList();
+    })
+    .catch(error => console.error('Error deleting hiring manager:', error));
 }
 
 // ================= SETTINGS =================

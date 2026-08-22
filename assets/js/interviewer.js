@@ -364,6 +364,7 @@ function stagePillClass(status) {
     'in-review': 'in-review',
     interview: 'interview',
     offer: 'offer',
+    hired: 'hired',
     rejected: 'rejected'
   };
   return map[status] || 'submitted';
@@ -375,6 +376,7 @@ function stageLabel(status) {
     'in-review': 'In Review',
     interview: 'Interview',
     offer: 'Offer',
+    hired: 'Hired',
     rejected: 'Rejected'
   };
   return map[status] || status;

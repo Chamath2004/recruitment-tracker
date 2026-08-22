@@ -5,6 +5,11 @@ let selectedJobId = null;
 let currentStep = 1;
 let activeJob = null;
 
+// Search & filter state
+let jobSearchQuery = "";
+let jobFilterCategory = "";
+let jobFilterType = "";
+
 // Form Data State
 let formData = {
   fullName: "",
@@ -27,6 +32,11 @@ const notificationsContainer = document.getElementById("notifications-container"
 const headerEl = document.querySelector(".header");
 const searchContainerEl = document.querySelector(".search-container");
 const resultsCountEl = document.querySelector(".results-count");
+const jobSearchInput = document.getElementById("job-search-input");
+const filterDropdownEl = document.getElementById("filter-dropdown");
+const filterCategorySelect = document.getElementById("filter-category-select");
+const filterTypeSelect = document.getElementById("filter-type-select");
+const filterCountBadge = document.getElementById("filter-count-badge");
 
 // Show only the requested view and keep the sidebar's active state in sync.
 // Each view owns its own container so switching never deletes another
@@ -66,9 +76,93 @@ function switchView(view) {
   }
 }
 
+// Return jobsData narrowed by the current search text and filter selections
+function getFilteredJobs() {
+  const query = jobSearchQuery.trim().toLowerCase();
+
+  return jobsData.filter(job => {
+    const matchesQuery = !query ||
+      (job.title || "").toLowerCase().includes(query) ||
+      (job.category || "").toLowerCase().includes(query) ||
+      (job.description || "").toLowerCase().includes(query);
+
+    const matchesCategory = !jobFilterCategory || job.category === jobFilterCategory;
+    const matchesType = !jobFilterType || job.type === jobFilterType;
+
+    return matchesQuery && matchesCategory && matchesType;
+  });
+}
+
+// Rebuild the category/type <select> options from the currently loaded jobs
+function populateFilterOptions() {
+  const categories = [...new Set(jobsData.map(job => job.category).filter(Boolean))].sort();
+  const types = [...new Set(jobsData.map(job => job.type).filter(Boolean))].sort();
+
+  filterCategorySelect.innerHTML = '<option value="">All Categories</option>' +
+    categories.map(c => `<option value="${c}">${c}</option>`).join('');
+  filterTypeSelect.innerHTML = '<option value="">All Types</option>' +
+    types.map(t => `<option value="${t}">${t}</option>`).join('');
+}
+
+function toggleFilterDropdown() {
+  filterDropdownEl.style.display = filterDropdownEl.style.display === "none" ? "block" : "none";
+}
+
+function clearJobFilters() {
+  jobFilterCategory = "";
+  jobFilterType = "";
+  filterCategorySelect.value = "";
+  filterTypeSelect.value = "";
+  applyJobFilters();
+}
+
+function applyJobFilters() {
+  jobFilterCategory = filterCategorySelect.value;
+  jobFilterType = filterTypeSelect.value;
+
+  const activeFilterCount = (jobFilterCategory ? 1 : 0) + (jobFilterType ? 1 : 0);
+  if (activeFilterCount > 0) {
+    filterCountBadge.textContent = activeFilterCount;
+    filterCountBadge.style.display = "inline-flex";
+  } else {
+    filterCountBadge.style.display = "none";
+  }
+
+  renderJobs();
+}
+
+jobSearchInput.addEventListener("input", () => {
+  jobSearchQuery = jobSearchInput.value;
+  renderJobs();
+});
+
+filterCategorySelect.addEventListener("change", applyJobFilters);
+filterTypeSelect.addEventListener("change", applyJobFilters);
+
+// Close the filter dropdown when clicking outside of it
+document.addEventListener("click", (e) => {
+  if (filterDropdownEl.style.display !== "none" &&
+      !e.target.closest(".filter-wrapper")) {
+    filterDropdownEl.style.display = "none";
+  }
+});
+
 // Render Jobs List
 function renderJobs() {
-  jobsListContainer.innerHTML = jobsData.map(job => `
+  const filteredJobs = getFilteredJobs();
+  resultsCountEl.querySelector('#job-count').textContent = filteredJobs.length;
+
+  if (filteredJobs.length === 0) {
+    jobsListContainer.innerHTML = `
+      <div class="jobs-empty-state">
+        <p>No jobs match your search${jobFilterCategory || jobFilterType ? " and filters" : ""}.</p>
+      </div>
+    `;
+    lucide.createIcons();
+    return;
+  }
+
+  jobsListContainer.innerHTML = filteredJobs.map(job => `
     <div class="job-card ${selectedJobId === job.id ? 'selected' : ''}" onclick="selectJob(${job.id})">
       <div class="job-info">
         <h3 class="job-title">${job.title}</h3>
@@ -156,6 +250,7 @@ function openApplication(jobId) {
     phone: "",
     linkedin: "",
     resumeName: "",
+    resumeFile: null,
     coverLetter: ""
   };
 
@@ -202,7 +297,7 @@ function renderApplicationStep() {
             <input type="email" id="input-email" value="${formData.email}">
           </div>
           <div class="form-group">
-            <label>Phone</label>
+            <label>Phone *</label>
             <input type="tel" id="input-phone" value="${formData.phone}">
           </div>
           <div class="form-group">
@@ -240,7 +335,7 @@ function renderApplicationStep() {
       </div>
 
       <div class="form-card">
-        <h3>Resume / CV Upload</h3>
+        <h3>Resume / CV Upload *</h3>
         <div class="upload-box" onclick="document.getElementById('resume-file-input').click()">
           <i data-lucide="upload" class="upload-icon"></i>
           <div class="upload-title" id="upload-title">${formData.resumeName || "Click to upload your resume"}</div>
@@ -252,7 +347,7 @@ function renderApplicationStep() {
 
       <div class="form-actions">
         <button class="cancel-btn" onclick="goToStep(1)">Back</button>
-        <button class="continue-btn" onclick="goToStep(3)">
+        <button class="continue-btn" onclick="saveStep2AndNext()">
           Continue <i data-lucide="chevron-right"></i>
         </button>
       </div>
@@ -386,18 +481,28 @@ function saveStep1AndNext() {
 
   const fullName = nameEl ? nameEl.value.trim() : "";
   const email = emailEl ? emailEl.value.trim() : "";
+  const phone = phoneEl ? phoneEl.value.trim() : "";
 
-  if (!fullName || !email) {
-    alert("Please enter your full name and email before continuing.");
+  if (!fullName || !email || !phone) {
+    alert("Please enter your full name, email, and phone number before continuing.");
     return;
   }
 
   formData.fullName = fullName;
   formData.email = email;
-  if (phoneEl) formData.phone = phoneEl.value;
+  formData.phone = phone;
   if (linkedinEl) formData.linkedin = linkedinEl.value;
 
   goToStep(2);
+}
+
+function saveStep2AndNext() {
+  if (!formData.resumeFile) {
+    alert("Please upload your resume/CV before continuing.");
+    return;
+  }
+
+  goToStep(3);
 }
 
 function saveStep3AndNext() {
@@ -439,7 +544,7 @@ function loadJobs() {
     .then(result => {
       if (!result.success) return;
       jobsData = result.data;
-      resultsCountEl.querySelector('#job-count').textContent = jobsData.length;
+      populateFilterOptions();
       renderJobs();
     })
     .catch(error => console.error('Error loading jobs:', error));
@@ -557,6 +662,7 @@ function loadSessionProfile() {
       profileData.location = c.location || "";
       profileData.linkedin = c.linkedin_url || "";
       profileData.headline = c.professional_headline || "";
+      profileData.resumeFile = c.resume_name || "";
       profileLoaded = true;
 
       const initials = getInitials(profileData.fullName) || "?";
@@ -819,8 +925,9 @@ function renderProfileView() {
               <i data-lucide="file-text" class="resume-icon"></i>
               <p class="resume-filename">${p.resumeFile || 'No resume uploaded yet'}</p>
               <div class="resume-actions">
-                ${p.resumeFile ? `<button class="resume-link-btn">View</button><span class="resume-divider">•</span>` : ''}
-                <button class="resume-link-btn"><i data-lucide="upload"></i>Update</button>
+                ${p.resumeFile ? `<a class="resume-link-btn" href="../api/download_profile_resume.php?mode=view" target="_blank" rel="noopener noreferrer">View</a><span class="resume-divider">•</span>` : ''}
+                <button class="resume-link-btn" onclick="document.getElementById('profile-resume-input').click()"><i data-lucide="upload"></i>${p.resumeFile ? 'Update' : 'Upload'}</button>
+                <input type="file" id="profile-resume-input" style="display:none;" accept=".pdf,.doc,.docx" onchange="handleProfileResumeUpload(event)">
               </div>
             </div>
           </div>
@@ -873,6 +980,38 @@ function toggleProfileEdit() {
   renderProfileView();
 }
 
+function handleProfileResumeUpload(e) {
+  const file = e.target.files && e.target.files[0];
+  if (!file) return;
+
+  if (file.size > 5 * 1024 * 1024) {
+    alert("Resume file is too large. Please upload a file under 5MB.");
+    e.target.value = "";
+    return;
+  }
+
+  const formData = new FormData();
+  formData.append('resume', file);
+
+  fetch('../api/update_profile_resume.php', {
+    method: 'POST',
+    body: formData
+  })
+    .then(response => response.json())
+    .then(result => {
+      if (!result.success) {
+        alert(result.message || 'Failed to upload resume.');
+        return;
+      }
+      profileData.resumeFile = result.resume_name;
+      renderProfileView();
+    })
+    .catch(error => {
+      console.error('Error uploading resume:', error);
+      alert('An error occurred while uploading your resume.');
+    });
+}
+
 function addProfileSkill() {
   const input = document.getElementById('new-skill-input');
   const value = input.value.trim();
@@ -885,6 +1024,78 @@ function addProfileSkill() {
 function removeProfileSkill(skill) {
   profileData.skills = profileData.skills.filter(s => s !== skill);
   renderProfileView();
+}
+
+const APPLICATION_STAGE_ORDER = ['submitted', 'in-review', 'interview', 'offer', 'hired'];
+const APPLICATION_STAGE_LABELS = {
+  submitted: 'Applied',
+  'in-review': 'In Review',
+  interview: 'Interview',
+  offer: 'Offer',
+  hired: 'Hired'
+};
+
+function applicationStatusBadge(status) {
+  const map = {
+    submitted: { label: 'Applied', cls: 'blue' },
+    'in-review': { label: 'In Review', cls: 'blue' },
+    interview: { label: 'Interview', cls: 'purple' },
+    offer: { label: 'Offer Extended', cls: 'green' },
+    hired: { label: 'Hired', cls: 'green-strong' },
+    rejected: { label: 'Not Selected', cls: 'red' }
+  };
+  return map[status] || map.submitted;
+}
+
+function renderApplicationProgress(status, formattedDate) {
+  if (status === 'rejected') {
+    return `<span class="application-progress-chip rejected"><i data-lucide="x-circle"></i> Application not selected</span>`;
+  }
+
+  const currentIdx = Math.max(APPLICATION_STAGE_ORDER.indexOf(status), 0);
+
+  return APPLICATION_STAGE_ORDER.slice(0, currentIdx + 1).map((stage, i) => {
+    const isCurrent = i === currentIdx;
+    const label = stage === 'submitted' ? `Applied (${formattedDate})` : APPLICATION_STAGE_LABELS[stage];
+    return `<span class="application-progress-chip ${isCurrent ? 'current' : 'done'}"><i data-lucide="${isCurrent ? 'circle-dot' : 'check'}"></i> ${label}</span>`;
+  }).join('');
+}
+
+function renderApplicationStatusNote(status, jobTitle) {
+  if (status === 'offer') {
+    return `
+      <div class="interview-info-box offer">
+        <div class="interview-info-header">
+          <i data-lucide="party-popper"></i>
+          <span>You've received an offer!</span>
+        </div>
+        <p class="interview-info-detail">Congratulations — you're being offered the ${jobTitle} position. HR will reach out with next steps.</p>
+      </div>
+    `;
+  }
+  if (status === 'hired') {
+    return `
+      <div class="interview-info-box offer">
+        <div class="interview-info-header">
+          <i data-lucide="party-popper"></i>
+          <span>You've been hired!</span>
+        </div>
+        <p class="interview-info-detail">Welcome aboard — congratulations on joining as ${jobTitle}.</p>
+      </div>
+    `;
+  }
+  if (status === 'rejected') {
+    return `
+      <div class="interview-info-box rejected">
+        <div class="interview-info-header">
+          <i data-lucide="info"></i>
+          <span>Application update</span>
+        </div>
+        <p class="interview-info-detail">Thank you for your interest in the ${jobTitle} role. You have not been selected to move forward at this time.</p>
+      </div>
+    `;
+  }
+  return '';
 }
 
 function loadUserApplications() {
@@ -955,6 +1166,8 @@ function loadUserApplications() {
             `;
           }
 
+          const statusBadge = applicationStatusBadge(app.status);
+
           appsHtml += `
             <div class="application-card">
               <div style="display: flex; justify-content: space-between; align-items: flex-start;">
@@ -962,14 +1175,13 @@ function loadUserApplications() {
                   <h3>${app.job_title}</h3>
                   <p class="meta">TalentFlow Inc. • Applied on ${formattedDate}</p>
                 </div>
-                <span class="application-status-badge">Applied</span>
+                <span class="application-status-badge ${statusBadge.cls}">${statusBadge.label}</span>
               </div>
               <div class="application-progress-row">
-                <span class="application-progress-chip">
-                  <i data-lucide="check"></i> Applied (${formattedDate})
-                </span>
+                ${renderApplicationProgress(app.status, formattedDate)}
               </div>
               ${interviewHtml}
+              ${renderApplicationStatusNote(app.status, app.job_title)}
             </div>
           `;
         });

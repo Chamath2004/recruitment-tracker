@@ -1,0 +1,389 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>TalentFlow - Hiring Manager Sign In</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <script src="https://unpkg.com/lucide@latest"></script>
+  <script>
+    document.documentElement.setAttribute('data-theme', localStorage.getItem('theme') || 'dark');
+  </script>
+  <style>
+    :root {
+      --bg-page: #0a0a0b;
+      --bg-card: #18181b;
+      --bg-input: #1f1f23;
+      --border-color: rgba(255, 255, 255, 0.08);
+      --border-input: rgba(255, 255, 255, 0.12);
+      --text-main: #f4f4f5;
+      --text-muted: #9ca3af;
+      --text-body: #d4d4d8;
+      --text-dim: #71717a;
+      --accent: #d97706;
+      --accent-hover: #b45309;
+      --accent-light: #f59e0b;
+      --card-shadow: 0 4px 20px rgba(0, 0, 0, 0.4);
+    }
+    [data-theme="light"] {
+      --bg-page: #F9F9F9;
+      --bg-card: #ffffff;
+      --bg-input: #ffffff;
+      --border-color: #e2e8f0;
+      --border-input: #d1d5db;
+      --text-main: #0f172a;
+      --text-muted: #4b5563;
+      --text-body: #374151;
+      --text-dim: #9ca3af;
+      --accent: #d97706;
+      --accent-hover: #b45309;
+      --accent-light: #d97706;
+      --card-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+    }
+    * {
+      box-sizing: border-box;
+      font-family: 'Inter', sans-serif;
+    }
+    body {
+      margin: 0;
+      background-color: var(--bg-page);
+      display: flex;
+      min-height: 100vh;
+      transition: background-color 0.2s ease;
+    }
+    .page-wrapper {
+      display: flex;
+      width: 100%;
+      min-height: 100vh;
+    }
+
+    /* Theme Toggle */
+    .theme-toggle-btn {
+      position: fixed;
+      top: 20px;
+      right: 20px;
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      background-color: var(--bg-card);
+      border: 1px solid var(--border-color);
+      color: var(--text-main);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      z-index: 1000;
+    }
+    .theme-toggle-btn svg {
+      width: 18px;
+      height: 18px;
+    }
+
+    /* Left Brand Panel */
+    .left-brand-panel {
+      width: 400px;
+      background: var(--bg-page);
+      border-right: 1px solid var(--border-color);
+      color: var(--text-main);
+      padding: 60px 40px;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+    }
+    .brand-logo-area {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 8px;
+    }
+    .brand-logo-img {
+      width: 100%;
+      max-width: 190px;
+      height: auto;
+      object-fit: contain;
+    }
+    .brand-logo-img.for-light {
+      display: none;
+    }
+    [data-theme="light"] .brand-logo-img.for-dark {
+      display: none;
+    }
+    [data-theme="light"] .brand-logo-img.for-light {
+      display: block;
+    }
+    .brand-label {
+      margin: 0;
+      font-size: 14px;
+      font-weight: 600;
+      letter-spacing: 0.02em;
+      color: var(--text-muted);
+    }
+    .brand-middle h1 {
+      font-size: 32px;
+      line-height: 1.3;
+      margin: 0 0 16px 0;
+      font-weight: 700;
+      color: var(--text-main);
+    }
+    .brand-middle p {
+      color: var(--text-muted);
+      font-size: 15px;
+      line-height: 1.5;
+      margin: 0;
+    }
+    .brand-footer {
+      font-size: 13px;
+      color: var(--text-dim);
+    }
+
+    /* Right Form Panel */
+    .right-form-panel {
+      flex: 1;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      padding: 40px;
+    }
+    .login-container {
+      width: 100%;
+      max-width: 520px;
+      padding: 40px;
+      background: var(--bg-card);
+      border: 1px solid var(--border-color);
+      border-radius: 16px;
+      box-shadow: var(--card-shadow);
+    }
+    .login-container h2 {
+      margin: 0 0 6px 0;
+      font-size: 28px;
+      color: var(--text-main);
+      font-weight: 700;
+    }
+    .subtitle {
+      color: var(--text-muted);
+      font-size: 15px;
+      margin-bottom: 20px;
+    }
+    .subtitle span {
+      font-weight: 600;
+      color: var(--text-main);
+    }
+
+    /* Form Fields */
+    .form-group {
+      margin-bottom: 20px;
+    }
+    label {
+      display: block;
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--text-body);
+      margin-bottom: 6px;
+    }
+    .input-icon-wrapper {
+      position: relative;
+      display: flex;
+      align-items: center;
+    }
+    .input-icon-wrapper input {
+      width: 100%;
+      padding: 11px 14px 11px 42px;
+      border: 1px solid var(--border-input);
+      border-radius: 8px;
+      font-size: 14px;
+      outline: none;
+      transition: border-color 0.2s, box-shadow 0.2s;
+      color: var(--text-main);
+      background-color: var(--bg-input);
+    }
+    .input-icon-wrapper input::placeholder {
+      color: var(--text-dim);
+    }
+    .input-icon-wrapper input:focus {
+      border-color: var(--accent);
+      box-shadow: 0 0 0 1px var(--accent);
+    }
+    .input-icon-wrapper .left-icon {
+      position: absolute;
+      left: 14px;
+      width: 18px;
+      height: 18px;
+      color: var(--text-dim);
+      pointer-events: none;
+    }
+    .toggle-password {
+      position: absolute;
+      right: 14px;
+      background: none;
+      border: none;
+      cursor: pointer;
+      color: var(--text-muted);
+      padding: 0;
+      display: flex;
+      align-items: center;
+    }
+    .toggle-password svg {
+      width: 18px;
+      height: 18px;
+    }
+
+    /* Options Row */
+    .options-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 24px;
+      font-size: 14px;
+    }
+    .remember-me {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      color: var(--text-body);
+      cursor: pointer;
+    }
+    .remember-me input {
+      width: 16px;
+      height: 16px;
+      accent-color: var(--accent);
+      cursor: pointer;
+    }
+    .forgot-password {
+      color: var(--accent-light);
+      text-decoration: none;
+      font-weight: 500;
+    }
+    .forgot-password:hover {
+      text-decoration: underline;
+    }
+
+    /* Sign In Button */
+    .signin-btn {
+      width: 100%;
+      padding: 12px;
+      background: var(--accent);
+      color: white;
+      border: none;
+      border-radius: 8px;
+      font-size: 15px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: background 0.2s;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+    }
+    .signin-btn:hover {
+      background: var(--accent-hover);
+    }
+
+    .mobile-brand {
+      display: none;
+    }
+
+    @media (max-width: 860px) {
+      .left-brand-panel {
+        display: none;
+      }
+      .right-form-panel {
+        padding: 24px 16px;
+        flex-direction: column;
+      }
+      .mobile-brand {
+        display: flex;
+        justify-content: center;
+        margin-bottom: 20px;
+      }
+    }
+
+    @media (max-width: 480px) {
+      .login-container {
+        padding: 24px 20px;
+      }
+      .theme-toggle-btn {
+        top: 16px;
+        right: 16px;
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <button class="theme-toggle-btn" onclick="toggleTheme()" title="Toggle theme">
+    <i id="theme-toggle-icon" data-lucide="sun"></i>
+  </button>
+
+  <div class="page-wrapper">
+    <!-- Left Brand Panel -->
+    <div class="left-brand-panel">
+      <div class="brand-logo-area">
+        <img src="../images/Altrium-logo-1.png" alt="Altrium logo" class="brand-logo-img for-light">
+        <img src="../images/Altrium-logo-white.png" alt="Altrium logo" class="brand-logo-img for-dark">
+        <span class="brand-label">Hiring Manager</span>
+      </div>
+
+      <div class="brand-middle">
+        <h1>Move the right candidates forward.</h1>
+        <p>Track your pipeline, review interview feedback, and make the final call on every hire.</p>
+      </div>
+
+      <div class="brand-footer">
+        &copy; 2026 TalentFlow Inc. All rights reserved.
+      </div>
+    </div>
+
+    <!-- Right Form Panel -->
+    <div class="right-form-panel">
+      <div class="mobile-brand">
+        <img src="../images/Altrium-logo-1.png" alt="Altrium logo" class="brand-logo-img for-light">
+        <img src="../images/Altrium-logo-white.png" alt="Altrium logo" class="brand-logo-img for-dark">
+      </div>
+      <div class="login-container">
+        <h2>Welcome back</h2>
+        <div class="subtitle">Sign in as <span>Hiring Manager</span></div>
+
+        <form>
+          <div class="form-group">
+            <label>Email Address</label>
+            <div class="input-icon-wrapper">
+              <i data-lucide="mail" class="left-icon"></i>
+              <input type="email" id="login-email" placeholder="you@company.com">
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label>Password</label>
+            <div class="input-icon-wrapper">
+              <i data-lucide="lock" class="left-icon"></i>
+              <input type="password" id="login-password" placeholder="Enter your password">
+              <button type="button" class="toggle-password">
+                <i data-lucide="eye"></i>
+              </button>
+            </div>
+          </div>
+
+          <div class="options-row">
+            <label class="remember-me">
+              <input type="checkbox"> Remember me
+            </label>
+            <a href="#" class="forgot-password">Forgot password?</a>
+          </div>
+
+          <button type="button" class="signin-btn" onclick="submitHiringManagerLogin()">
+            Sign In <i data-lucide="arrow-right" style="width: 18px; height: 18px;"></i>
+          </button>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    lucide.createIcons();
+  </script>
+  <script src="../assets/js/theme.js"></script>
+  <script src="../assets/js/hiring_manager_login.js"></script>
+</body>
+</html>

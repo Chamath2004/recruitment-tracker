@@ -51,6 +51,10 @@
             <i data-lucide="briefcase"></i>
             <span>Vacancy Management</span>
           </a>
+          <a href="#" class="nav-item" id="nav-manage-candidates" onclick="switchHrView(this, 'manage-candidates', 'Manage Candidates')">
+            <i data-lucide="user-check"></i>
+            <span>Manage Candidates</span>
+          </a>
           <a href="#" class="nav-item" id="nav-workflows" onclick="switchHrView(this, 'workflows', 'Hiring Workflows')">
             <i data-lucide="clipboard-list"></i>
             <span>Hiring Workflows</span>
@@ -168,6 +172,44 @@
         <div class="vacancy-grid" id="vacancy-grid"></div>
       </div>
 
+      <div id="manage-candidates-view" style="display: none;">
+        <header class="header">
+          <h1>Manage Candidates</h1>
+          <p>Review submitted applications and shortlist candidates for hiring managers to work with</p>
+        </header>
+
+        <div class="vacancy-toolbar">
+          <div class="vacancy-search-wrapper">
+            <i data-lucide="search"></i>
+            <input type="text" id="candidate-search-input" placeholder="Search by name, email, or position..." oninput="renderManageCandidatesTable()">
+          </div>
+          <div class="filter-pills" id="candidate-filter-pills">
+            <button class="filter-pill active" data-filter="all" onclick="setCandidateFilter('all')">All</button>
+            <button class="filter-pill" data-filter="pending" onclick="setCandidateFilter('pending')">Pending Review</button>
+            <button class="filter-pill" data-filter="shortlisted" onclick="setCandidateFilter('shortlisted')">Shortlisted</button>
+            <button class="filter-pill" data-filter="rejected" onclick="setCandidateFilter('rejected')">Rejected</button>
+          </div>
+        </div>
+
+        <div class="panel-card">
+          <div class="table-wrap">
+            <table class="data-table">
+              <thead>
+                <tr>
+                  <th>Candidate</th>
+                  <th>Position</th>
+                  <th>Applied</th>
+                  <th>Status</th>
+                  <th>Shortlisted</th>
+                  <th>Actions</th>
+                </tr>
+              </thead>
+              <tbody id="manage-candidates-table-body"></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
       <div id="workflows-view" style="display: none;">
         <header class="header">
           <h1>Hiring Workflows</h1>
@@ -261,6 +303,7 @@
           <div class="filter-pills" id="access-tab-pills">
             <button class="filter-pill active" data-tab="hr" onclick="setAccessTab('hr')">HR Users</button>
             <button class="filter-pill" data-tab="interviewers" onclick="setAccessTab('interviewers')">Interviewers</button>
+            <button class="filter-pill" data-tab="hiring-managers" onclick="setAccessTab('hiring-managers')">Hiring Managers</button>
           </div>
         </div>
 
@@ -306,6 +349,29 @@
                   </tr>
                 </thead>
                 <tbody id="interviewers-table-body"></tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+
+        <div id="access-hiring-managers-section" style="display: none;">
+          <div class="access-tab-toolbar">
+            <button class="new-vacancy-btn" onclick="openHiringManagerModal()">
+              <i data-lucide="user-plus"></i> Add Hiring Manager
+            </button>
+          </div>
+          <div class="panel-card">
+            <div class="table-wrap">
+              <table class="data-table">
+                <thead>
+                  <tr>
+                    <th>Name</th>
+                    <th>Email</th>
+                    <th>Department</th>
+                    <th></th>
+                  </tr>
+                </thead>
+                <tbody id="hiring-managers-table-body"></tbody>
               </table>
             </div>
           </div>

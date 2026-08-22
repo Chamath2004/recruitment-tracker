@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>TalentFlow - Hiring Manager Dashboard</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <script src="https://unpkg.com/lucide@latest"></script>
+  <script>
+    document.documentElement.setAttribute('data-theme', localStorage.getItem('theme') || 'dark');
+  </script>
+  <link rel="stylesheet" href="../assets/css/Candidate.css">
+  <link rel="stylesheet" href="../assets/css/hr.css">
+  <link rel="stylesheet" href="../assets/css/interviewer.css">
+  <link rel="stylesheet" href="../assets/css/hiring_manager.css">
+</head>
+
+<body>
+  <button class="theme-toggle-btn" onclick="toggleTheme()" title="Toggle theme">
+    <i id="theme-toggle-icon" data-lucide="sun"></i>
+  </button>
+  <button class="mobile-menu-btn" title="Menu">
+    <i data-lucide="menu"></i>
+  </button>
+  <div class="sidebar-backdrop"></div>
+  <div class="mobile-topbar">
+    <img src="../images/Altrium-logo-1.png" alt="Altrium logo" class="brand-logo-img for-light">
+    <img src="../images/Altrium-logo-white.png" alt="Altrium logo" class="brand-logo-img for-dark">
+  </div>
+
+  <div class="app-container">
+    <!-- Sidebar -->
+    <aside class="sidebar">
+      <button class="sidebar-close-btn" title="Close menu">
+        <i data-lucide="x"></i>
+      </button>
+      <div class="sidebar-top">
+        <div class="brand">
+          <img src="../images/Altrium-logo-1.png" alt="Altrium logo" class="brand-logo-img for-light">
+          <img src="../images/Altrium-logo-white.png" alt="Altrium logo" class="brand-logo-img for-dark">
+          <span class="brand-label">Hiring Manager</span>
+        </div>
+
+        <nav class="nav-menu">
+          <a href="#" class="nav-item active" id="nav-pipeline" onclick="switchHmView(this, 'pipeline')">
+            <i data-lucide="kanban"></i>
+            <span>Pipeline Board</span>
+          </a>
+          <a href="#" class="nav-item" id="nav-shortlisted" onclick="switchHmView(this, 'shortlisted')">
+            <i data-lucide="user-check"></i>
+            <span>Shortlisted Candidates</span>
+          </a>
+          <a href="#" class="nav-item" id="nav-review-feedback" onclick="switchHmView(this, 'review-feedback')">
+            <i data-lucide="message-square"></i>
+            <span>Review Feedback</span>
+          </a>
+          <a href="#" class="nav-item" id="nav-hiring-decisions" onclick="switchHmView(this, 'hiring-decisions')">
+            <i data-lucide="clipboard-list"></i>
+            <span>Hiring Decisions</span>
+          </a>
+        </nav>
+      </div>
+
+      <div class="sidebar-bottom">
+        <div class="user-profile">
+          <div class="avatar" id="sidebar-avatar">--</div>
+          <div class="user-info">
+            <span class="name" id="sidebar-name">Loading…</span>
+            <span class="email" id="sidebar-email"></span>
+          </div>
+        </div>
+        <button class="sign-out-btn" onclick="window.location.href='../api/logout.php?role=hiring_manager'">
+          <i data-lucide="log-out"></i>
+          <span>Sign Out</span>
+        </button>
+        <button class="collapse-btn">
+          <i data-lucide="chevron-left"></i>
+          <span>Collapse</span>
+        </button>
+      </div>
+    </aside>
+
+    <!-- Main Content -->
+    <main class="main-content">
+      <div id="pipeline-view">
+        <div class="view-header-row">
+          <div>
+            <h1 style="font-size: 24px; font-weight: 700; margin-bottom: 4px;">Pipeline Board</h1>
+            <p style="font-size: 14px; color: var(--text-muted);">Drag candidates between stages to update their status</p>
+          </div>
+          <select id="pipeline-vacancy-select" class="hm-select" onchange="renderKanban()"></select>
+        </div>
+
+        <div class="kanban-board" id="kanban-board"></div>
+      </div>
+
+      <div id="shortlisted-view" style="display: none;">
+        <header class="header">
+          <h1>Shortlisted Candidates</h1>
+          <p>Review top candidates who have moved into interviews, offers, or hires</p>
+        </header>
+
+        <div class="metric-grid" id="shortlisted-stat-grid"></div>
+
+        <div id="shortlisted-list"></div>
+      </div>
+
+      <div id="review-feedback-view" style="display: none;">
+        <header class="header">
+          <h1>Review Feedback</h1>
+          <p>View all interview feedback submitted by interviewers and HR</p>
+        </header>
+
+        <div class="vacancy-toolbar">
+          <div class="filter-pills" id="review-feedback-filter-pills"></div>
+        </div>
+
+        <div id="review-feedback-list"></div>
+      </div>
+
+      <div id="hiring-decisions-view" style="display: none;">
+        <header class="header">
+          <h1>Hiring Decisions</h1>
+          <p>Review candidates on offer and make the final hire or reject call</p>
+        </header>
+
+        <div class="metric-grid" id="decisions-stat-grid"></div>
+
+        <div id="decisions-list"></div>
+      </div>
+    </main>
+  </div>
+
+  <script src="../assets/js/theme.js"></script>
+  <script src="../assets/js/hiring_manager.js"></script>
+</body>
+
+</html>
