@@ -22,9 +22,9 @@ function formatHmDate(dateStr) {
   return d.toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' });
 }
 
-const STAGE_ORDER = ['submitted', 'in-review', 'interview', 'offer', 'hired', 'rejected'];
+const STAGE_ORDER = ['submitted', 'interview', 'in-review', 'offer', 'hired', 'rejected'];
 const STAGE_LABELS = {
-  'submitted': 'Submitted',
+  'submitted': 'Shortlisted',
   'in-review': 'In Review',
   'interview': 'Interview',
   'offer': 'Offer',
@@ -110,8 +110,6 @@ function populateVacancySelect() {
 
 // ================= KANBAN BOARD =================
 
-let draggedApplicationId = null;
-
 function renderKanban() {
   if (!pipelineLoaded) return;
   const board = document.getElementById('kanban-board');
@@ -130,19 +128,19 @@ function renderKanban() {
           <span class="kanban-column-title">${STAGE_LABELS[stage]}</span>
           <span class="kanban-column-count">${stageApps.length}</span>
         </div>
-        <div class="kanban-column-body" data-stage="${stage}"
-             ondragover="handleKanbanDragOver(event)"
-             ondragleave="handleKanbanDragLeave(event)"
-             ondrop="handleKanbanDrop(event, '${stage}')">
+        <div class="kanban-column-body" data-stage="${stage}">
           ${stageApps.length === 0
-            ? `<div class="kanban-empty">Drop candidates here</div>`
+            ? `<div class="kanban-empty">No candidates</div>`
             : stageApps.map(a => `
-              <div class="kanban-card" draggable="true"
-                   ondragstart="handleKanbanDragStart(event, ${a.id})"
-                   ondragend="handleKanbanDragEnd(event)">
+              <div class="kanban-card">
                 <div class="kanban-card-name">${a.full_name || a.email}</div>
                 <div class="kanban-card-sub">${a.job_title}</div>
                 <div class="kanban-card-date"><i data-lucide="calendar"></i>Applied ${formatHmDate(a.created_at)}</div>
+                ${stage === 'offer'
+                  ? `<button class="kanban-card-action hire" onclick="moveApplicationStatus(${a.id}, 'hired')"><i data-lucide="check"></i>Hire</button>`
+                  : ['submitted', 'interview', 'in-review'].includes(stage)
+                    ? `<button class="kanban-card-action offer" onclick="moveApplicationStatus(${a.id}, 'offer')"><i data-lucide="arrow-right"></i>Move to Offer</button>`
+                    : ''}
               </div>
             `).join('')}
         </div>
@@ -151,33 +149,6 @@ function renderKanban() {
   }).join('');
 
   lucide.createIcons();
-}
-
-function handleKanbanDragStart(e, applicationId) {
-  draggedApplicationId = applicationId;
-  e.target.classList.add('dragging');
-  e.dataTransfer.effectAllowed = 'move';
-}
-
-function handleKanbanDragEnd(e) {
-  e.target.classList.remove('dragging');
-}
-
-function handleKanbanDragOver(e) {
-  e.preventDefault();
-  e.currentTarget.classList.add('drag-over');
-}
-
-function handleKanbanDragLeave(e) {
-  e.currentTarget.classList.remove('drag-over');
-}
-
-function handleKanbanDrop(e, stage) {
-  e.preventDefault();
-  e.currentTarget.classList.remove('drag-over');
-  if (draggedApplicationId === null) return;
-  moveApplicationStatus(draggedApplicationId, stage);
-  draggedApplicationId = null;
 }
 
 function moveApplicationStatus(applicationId, status) {

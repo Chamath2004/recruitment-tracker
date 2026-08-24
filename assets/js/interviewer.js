@@ -188,7 +188,6 @@ function renderMyInterviews() {
         <div class="mi-card-right">
           <span class="feedback-stars">${starDisplay(iv.rating)}</span>
           <span class="stage-pill ${recommendationPillClass(iv.recommendation)}">${recommendationLabel(iv.recommendation)}</span>
-          <button class="mi-view-edit-link" onclick="openFeedbackPage(${iv.id})">Edit</button>
         </div>
       </div>
     `).join('');
@@ -235,6 +234,7 @@ function renderSubmitFeedbackList() {
             ${hasFeedback ? `
               <span class="feedback-stars">${starDisplay(iv.rating)}</span>
               <span class="stage-pill ${recommendationPillClass(iv.recommendation)}">${recommendationLabel(iv.recommendation)}</span>
+              <span class="mi-view-edit-link"><i data-lucide="pencil"></i> Edit</span>
             ` : `<span class="stage-pill pending">Needs Feedback</span>`}
           </div>
         </div>

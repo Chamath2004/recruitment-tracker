@@ -80,6 +80,11 @@ if ($id) {
     $id = $conn->insert_id;
     $stmt->close();
 
+    $statusStmt = $conn->prepare("UPDATE applications SET status = 'interview' WHERE id = ? AND status NOT IN ('interview', 'offer', 'hired', 'rejected')");
+    $statusStmt->bind_param("i", $applicationId);
+    $statusStmt->execute();
+    $statusStmt->close();
+
     $message = "Your $interviewType interview for $jobTitle has been scheduled on $interviewDate at $interviewTime.";
 }
 

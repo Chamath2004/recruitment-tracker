@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Altrium - Hiring Manager Sign In</title>
+  <title>Altrium - Sign In</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -22,9 +22,9 @@
       --text-muted: #9ca3af;
       --text-body: #d4d4d8;
       --text-dim: #71717a;
-      --accent: #d97706;
-      --accent-hover: #b45309;
-      --accent-light: #f59e0b;
+      --accent: #3b82f6;
+      --accent-hover: #2563eb;
+      --accent-light: #60a5fa;
       --card-shadow: 0 4px 20px rgba(0, 0, 0, 0.4);
     }
     [data-theme="light"] {
@@ -37,9 +37,9 @@
       --text-muted: #4b5563;
       --text-body: #374151;
       --text-dim: #9ca3af;
-      --accent: #d97706;
-      --accent-hover: #b45309;
-      --accent-light: #d97706;
+      --accent: #2563eb;
+      --accent-hover: #1d4ed8;
+      --accent-light: #2563eb;
       --card-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
     }
     * {
@@ -59,7 +59,6 @@
       min-height: 100vh;
     }
 
-    /* Theme Toggle */
     .theme-toggle-btn {
       position: fixed;
       top: 20px;
@@ -81,7 +80,6 @@
       height: 18px;
     }
 
-    /* Left Brand Panel */
     .left-brand-panel {
       width: 400px;
       background: var(--bg-page);
@@ -138,7 +136,6 @@
       color: var(--text-dim);
     }
 
-    /* Right Form Panel */
     .right-form-panel {
       flex: 1;
       display: flex;
@@ -171,7 +168,38 @@
       color: var(--text-main);
     }
 
-    /* Form Fields */
+    /* Role Tabs */
+    .role-tabs {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 6px;
+      background: var(--bg-input);
+      border: 1px solid var(--border-color);
+      border-radius: 10px;
+      padding: 4px;
+      margin-bottom: 24px;
+    }
+    .role-tab {
+      border: none;
+      background: transparent;
+      color: var(--text-muted);
+      font-size: 12.5px;
+      font-weight: 600;
+      padding: 9px 4px;
+      border-radius: 7px;
+      cursor: pointer;
+      text-align: center;
+      transition: background 0.15s, color 0.15s;
+      line-height: 1.25;
+    }
+    .role-tab:hover {
+      color: var(--text-main);
+    }
+    .role-tab.active {
+      background: var(--accent);
+      color: white;
+    }
+
     .form-group {
       margin-bottom: 20px;
     }
@@ -229,7 +257,6 @@
       height: 18px;
     }
 
-    /* Options Row */
     .options-row {
       display: flex;
       justify-content: space-between;
@@ -259,7 +286,6 @@
       text-decoration: underline;
     }
 
-    /* Sign In Button */
     .signin-btn {
       width: 100%;
       padding: 12px;
@@ -278,6 +304,67 @@
     }
     .signin-btn:hover {
       background: var(--accent-hover);
+    }
+
+    /* Quick Login (dev only) */
+    .quick-login-divider {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin: 20px 0;
+      color: var(--text-dim);
+      font-size: 12px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+    }
+    .quick-login-divider::before,
+    .quick-login-divider::after {
+      content: "";
+      flex: 1;
+      height: 1px;
+      background: var(--border-color);
+    }
+    .quick-login-btn {
+      width: 100%;
+      padding: 11px;
+      background: transparent;
+      color: var(--text-body);
+      border: 1px dashed var(--border-input);
+      border-radius: 8px;
+      font-size: 14px;
+      font-weight: 600;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      transition: border-color 0.2s, color 0.2s;
+    }
+    .quick-login-btn:hover {
+      border-color: var(--accent);
+      color: var(--accent-light);
+    }
+    .quick-login-note {
+      text-align: center;
+      font-size: 12px;
+      color: var(--text-dim);
+      margin-top: 8px;
+    }
+
+    .register-footer {
+      text-align: center;
+      margin-top: 24px;
+      font-size: 14px;
+      color: var(--text-muted);
+    }
+    .register-footer a {
+      color: var(--accent-light);
+      text-decoration: none;
+      font-weight: 600;
+    }
+    .register-footer a:hover {
+      text-decoration: underline;
     }
 
     .mobile-brand {
@@ -307,6 +394,9 @@
         top: 16px;
         right: 16px;
       }
+      .role-tabs {
+        grid-template-columns: repeat(2, 1fr);
+      }
     }
   </style>
 </head>
@@ -322,12 +412,12 @@
       <div class="brand-logo-area">
         <img src="../images/Altrium-logo-1.png" alt="Altrium logo" class="brand-logo-img for-light">
         <img src="../images/Altrium-logo-white.png" alt="Altrium logo" class="brand-logo-img for-dark">
-        <span class="brand-label">Hiring Manager</span>
+        <span class="brand-label" id="brand-role-label">Candidate</span>
       </div>
 
       <div class="brand-middle">
-        <h1>Move the right candidates forward.</h1>
-        <p>Track your pipeline, review interview feedback, and make the final call on every hire.</p>
+        <h1 id="brand-heading">Start your journey with top companies.</h1>
+        <p id="brand-subtext">Create your candidate profile, upload your resume, and track your job applications all in one place.</p>
       </div>
 
       <div class="brand-footer">
@@ -343,7 +433,14 @@
       </div>
       <div class="login-container">
         <h2>Welcome back</h2>
-        <div class="subtitle">Sign in as <span>Hiring Manager</span></div>
+        <div class="subtitle">Sign in as <span id="subtitle-role">Candidate</span></div>
+
+        <div class="role-tabs" id="role-tabs">
+          <button type="button" class="role-tab active" data-role="candidate">Candidate</button>
+          <button type="button" class="role-tab" data-role="hr">HR</button>
+          <button type="button" class="role-tab" data-role="interviewer">Interviewer</button>
+          <button type="button" class="role-tab" data-role="hiring_manager">Hiring Manager</button>
+        </div>
 
         <form>
           <div class="form-group">
@@ -372,10 +469,22 @@
             <a href="#" class="forgot-password">Forgot password?</a>
           </div>
 
-          <button type="button" class="signin-btn" onclick="submitHiringManagerLogin()">
+          <button type="button" class="signin-btn" onclick="submitUnifiedLogin()">
             Sign In <i data-lucide="arrow-right" style="width: 18px; height: 18px;"></i>
           </button>
         </form>
+
+        <div id="quick-login-section" style="display:none;">
+          <div class="quick-login-divider">Dev Shortcut</div>
+          <button type="button" class="quick-login-btn" id="quick-login-btn" onclick="submitQuickLogin()">
+            <i data-lucide="zap"></i> Quick Login as Demo <span id="quick-login-role-label">Candidate</span>
+          </button>
+          <p class="quick-login-note">Signs in instantly with a seeded demo account.</p>
+        </div>
+
+        <div class="register-footer" id="register-footer">
+          Don't have an account? <a href="Candidate_register.html">Register here</a>
+        </div>
       </div>
     </div>
   </div>
@@ -384,6 +493,6 @@
     lucide.createIcons();
   </script>
   <script src="../assets/js/theme.js"></script>
-  <script src="../assets/js/hiring_manager_login.js"></script>
+  <script src="../assets/js/login_unified.js"></script>
 </body>
 </html>

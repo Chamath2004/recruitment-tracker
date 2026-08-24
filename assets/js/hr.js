@@ -156,10 +156,7 @@ function renderVacanciesTable(activeVacancies) {
 
   tbody.innerHTML = activeVacancies.map(v => `
     <tr>
-      <td>
-        ${v.title}
-        <div class="cell-sub">${v.salary || ''}</div>
-      </td>
+      <td>${v.title}</td>
       <td>${v.department}</td>
       <td>${v.applicants}</td>
       <td><span class="active-pill">Active</span></td>
@@ -265,7 +262,6 @@ function renderVacancyGrid() {
       <h3>${v.title}</h3>
       <p class="dept">${v.department}</p>
       <div class="vacancy-meta-row">
-        <span><i data-lucide="dollar-sign"></i>${v.salary || '—'}</span>
         <span><i data-lucide="clock"></i>${v.type}</span>
       </div>
       <div class="vacancy-card-footer">
@@ -496,9 +492,9 @@ function renderManageCandidatesTable() {
           <div class="candidate-actions">
             ${c.resume_name ? `<a class="candidate-action-btn" href="../api/download_resume.php?application_id=${c.id}&mode=view" target="_blank" rel="noopener noreferrer">Resume</a>` : ''}
             ${c.shortlisted
-              ? `<button class="candidate-action-btn" onclick="reviewCandidate(${c.id}, 'unshortlist')">Un-shortlist</button>`
-              : `<button class="candidate-action-btn shortlist" onclick="reviewCandidate(${c.id}, 'shortlist')" ${isRejected ? 'disabled' : ''}>Shortlist</button>`}
-            ${!isRejected ? `<button class="candidate-action-btn reject" onclick="reviewCandidate(${c.id}, 'reject')">Reject</button>` : ''}
+              ? `<button class="candidate-action-btn" onclick="confirmReviewCandidate(${c.id}, 'unshortlist')">Un-shortlist</button>`
+              : `<button class="candidate-action-btn shortlist" onclick="confirmReviewCandidate(${c.id}, 'shortlist')" ${isRejected ? 'disabled' : ''}>Shortlist</button>`}
+            ${!isRejected ? `<button class="candidate-action-btn reject" onclick="confirmReviewCandidate(${c.id}, 'reject')">Reject</button>` : ''}
           </div>
         </td>
       </tr>
@@ -506,7 +502,43 @@ function renderManageCandidatesTable() {
   }).join('');
 }
 
-function reviewCandidate(applicationId, action) {
+const reviewActionCopy = {
+  shortlist: { title: 'Shortlist Candidate', label: 'Shortlist', message: name => `Are you sure you want to shortlist <strong>${name}</strong>? They'll become visible to Hiring Managers.` },
+  unshortlist: { title: 'Un-shortlist Candidate', label: 'Un-shortlist', message: name => `Are you sure you want to remove <strong>${name}</strong> from the shortlist? They'll no longer be visible to Hiring Managers.` },
+  reject: { title: 'Reject Candidate', label: 'Reject', message: name => `Are you sure you want to reject <strong>${name}</strong>? This will notify the candidate and mark their application as rejected.` }
+};
+
+function confirmReviewCandidate(applicationId, action) {
+  const candidate = manageCandidatesList.find(c => c.id === applicationId);
+  if (!candidate) return;
+
+  const name = candidate.full_name && candidate.full_name.trim() ? candidate.full_name : candidate.email;
+  const copy = reviewActionCopy[action];
+
+  const modalHtml = `
+    <div class="modal-overlay" id="confirm-modal-overlay" onclick="if(event.target===this) closeConfirmModal()">
+      <div class="modal-dialog confirm-modal-dialog">
+        <div class="modal-header">
+          <h2>${copy.title}</h2>
+          <button class="modal-close-btn" onclick="closeConfirmModal()"><i data-lucide="x"></i></button>
+        </div>
+        <div class="modal-body">
+          <p class="confirm-modal-message">${copy.message(name)}</p>
+        </div>
+        <div class="modal-footer">
+          <button class="modal-cancel-btn" onclick="closeConfirmModal()">Cancel</button>
+          <button class="modal-save-btn" onclick="runReviewCandidate(${applicationId}, '${action}')">${copy.label}</button>
+        </div>
+      </div>
+    </div>
+  `;
+
+  document.getElementById('modal-root').innerHTML = modalHtml;
+  lucide.createIcons();
+}
+
+function runReviewCandidate(applicationId, action) {
+  closeConfirmModal();
   fetch('../api/update_candidate_review.php', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },

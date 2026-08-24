@@ -156,6 +156,9 @@
 }
 
 .mi-view-edit-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
   font-size: 12px;
   font-weight: 500;
   color: var(--text-muted);
@@ -163,6 +166,11 @@
   background: none;
   border: none;
   cursor: pointer;
+}
+
+.mi-view-edit-link svg {
+  width: 12px;
+  height: 12px;
 }
 
 .mi-view-edit-link:hover {

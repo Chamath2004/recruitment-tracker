@@ -77,25 +77,16 @@
   transition: border-color 0.15s ease;
 }
 
-.kanban-column-body.drag-over {
-  border-color: var(--border-color);
-}
-
 .kanban-card {
   background-color: var(--bg-card);
   border: 1px solid var(--border-color);
   border-radius: 10px;
   padding: 12px;
-  cursor: grab;
-  transition: box-shadow 0.15s ease, opacity 0.15s ease;
+  transition: box-shadow 0.15s ease;
 }
 
 .kanban-card:hover {
   box-shadow: 0 4px 14px rgba(0, 0, 0, 0.12);
-}
-
-.kanban-card.dragging {
-  opacity: 0.4;
 }
 
 .kanban-card-name {
@@ -136,6 +127,45 @@
   font-size: 12px;
   color: var(--text-dim);
   font-style: italic;
+}
+
+.kanban-card-action {
+  width: 100%;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 5px;
+  font-size: 11.5px;
+  font-weight: 600;
+  padding: 7px 10px;
+  margin-top: 10px;
+  border-radius: 7px;
+  border: none;
+  cursor: pointer;
+  transition: background-color 0.15s ease;
+}
+
+.kanban-card-action svg {
+  width: 12px;
+  height: 12px;
+}
+
+.kanban-card-action.offer {
+  background-color: var(--badge-gray-bg);
+  color: var(--text-muted);
+}
+
+.kanban-card-action.offer:hover {
+  background-color: var(--hover-bg-card);
+}
+
+.kanban-card-action.hire {
+  background-color: #059669;
+  color: #ffffff;
+}
+
+.kanban-card-action.hire:hover {
+  background-color: #047857;
 }
 
 /* ================= CANDIDATE / DECISION CARDS ================= */

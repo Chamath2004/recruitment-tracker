@@ -62,6 +62,16 @@ $stmt->bind_param("iissi", $interviewId, $rating, $recommendation, $comments, $i
 $stmt->execute();
 $stmt->close();
 
+$appStmt = $conn->prepare("
+    UPDATE applications a
+    JOIN interviews i ON i.application_id = a.id
+    SET a.status = 'in-review'
+    WHERE i.id = ? AND a.status NOT IN ('in-review', 'offer', 'hired', 'rejected')
+");
+$appStmt->bind_param("i", $interviewId);
+$appStmt->execute();
+$appStmt->close();
+
 echo json_encode(["success" => true]);
 
 $conn->close();

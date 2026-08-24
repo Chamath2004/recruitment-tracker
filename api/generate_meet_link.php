@@ -40,7 +40,7 @@ if (!$date || !$time) {
 }
 
 $summary = $candidateName ? "$interviewType — $candidateName" : $interviewType;
-$description = "Interview scheduled via TalentFlow recruitment tracker.";
+$description = "Interview scheduled via Altrium recruitment tracker.";
 
 $result = googleCreateMeetEvent($accessToken, $summary, $description, $date, $time, $duration);
 

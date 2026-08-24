@@ -60,8 +60,28 @@ function setupMobileSidebar() {
   });
 }
 
+function setupPasswordToggles() {
+  document.querySelectorAll('.toggle-password').forEach(function (btn) {
+    const wrapper = btn.closest('.input-icon-wrapper');
+    const input = wrapper ? wrapper.querySelector('input[type="password"], input[type="text"]') : null;
+    if (!input) return;
+
+    btn.addEventListener('click', function () {
+      const isHidden = input.type === 'password';
+      input.type = isHidden ? 'text' : 'password';
+
+      const icon = btn.querySelector('i');
+      if (icon) {
+        icon.setAttribute('data-lucide', isHidden ? 'eye-off' : 'eye');
+      }
+      if (window.lucide) lucide.createIcons();
+    });
+  });
+}
+
 document.addEventListener('DOMContentLoaded', function () {
   const current = document.documentElement.getAttribute('data-theme') || 'dark';
   updateThemeIcon(current);
   setupMobileSidebar();
+  setupPasswordToggles();
 });

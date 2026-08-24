@@ -168,7 +168,6 @@ function renderJobs() {
         <h3 class="job-title">${job.title}</h3>
         <span class="job-category">${job.category}</span>
         <div class="job-meta">
-          <span><i data-lucide="dollar-sign"></i> ${job.salary}</span>
           <span><i data-lucide="clock"></i> ${job.type}</span>
         </div>
       </div>
@@ -202,7 +201,6 @@ function selectJob(id) {
 
     <div class="detail-tags">
       <span class="pill-tag green">${job.type}</span>
-      <span class="pill-tag blue">${job.salary}</span>
       <span class="pill-tag gray">${job.applicants}</span>
     </div>
 
@@ -925,7 +923,7 @@ function renderProfileView() {
               <i data-lucide="file-text" class="resume-icon"></i>
               <p class="resume-filename">${p.resumeFile || 'No resume uploaded yet'}</p>
               <div class="resume-actions">
-                ${p.resumeFile ? `<a class="resume-link-btn" href="../api/download_profile_resume.php?mode=view" target="_blank" rel="noopener noreferrer">View</a><span class="resume-divider">•</span>` : ''}
+                ${p.resumeFile ? `<a class="resume-link-btn" href="../api/download_profile_resume.php?mode=view" target="_blank" rel="noopener noreferrer">View</a><span class="resume-divider">•</span><a class="resume-link-btn" href="../api/download_profile_resume.php" download>Download</a><span class="resume-divider">•</span>` : ''}
                 <button class="resume-link-btn" onclick="document.getElementById('profile-resume-input').click()"><i data-lucide="upload"></i>${p.resumeFile ? 'Update' : 'Upload'}</button>
                 <input type="file" id="profile-resume-input" style="display:none;" accept=".pdf,.doc,.docx" onchange="handleProfileResumeUpload(event)">
               </div>
@@ -1173,7 +1171,7 @@ function loadUserApplications() {
               <div style="display: flex; justify-content: space-between; align-items: flex-start;">
                 <div>
                   <h3>${app.job_title}</h3>
-                  <p class="meta">TalentFlow Inc. • Applied on ${formattedDate}</p>
+                  <p class="meta">Altrium Inc. • Applied on ${formattedDate}</p>
                 </div>
                 <span class="application-status-badge ${statusBadge.cls}">${statusBadge.label}</span>
               </div>
