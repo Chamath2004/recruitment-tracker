@@ -15,6 +15,9 @@ if ($conn->connect_error) {
     exit();
 }
 
+require_once __DIR__ . '/interview_helpers.php';
+autoCompletePastInterviews($conn);
+
 $sql = "SELECT
             i.id, i.candidate_name, i.job_title, i.interview_type, i.interview_date, i.interview_time,
             i.interviewer, i.interviewer_id, i.mode,

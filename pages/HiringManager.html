@@ -12,10 +12,10 @@
   <script>
     document.documentElement.setAttribute('data-theme', localStorage.getItem('theme') || 'dark');
   </script>
-  <link rel="stylesheet" href="../assets/css/Candidate.css">
-  <link rel="stylesheet" href="../assets/css/hr.css">
-  <link rel="stylesheet" href="../assets/css/interviewer.css">
-  <link rel="stylesheet" href="../assets/css/hiring_manager.css">
+  <link rel="stylesheet" href="../assets/css/Candidate.css?v=20260824">
+  <link rel="stylesheet" href="../assets/css/hr.css?v=20260824">
+  <link rel="stylesheet" href="../assets/css/interviewer.css?v=20260824">
+  <link rel="stylesheet" href="../assets/css/hiring_manager.css?v=20260824">
 </head>
 
 <body>
@@ -49,9 +49,9 @@
             <i data-lucide="kanban"></i>
             <span>Pipeline Board</span>
           </a>
-          <a href="#" class="nav-item" id="nav-shortlisted" onclick="switchHmView(this, 'shortlisted')">
+          <a href="#" class="nav-item" id="nav-review-candidates" onclick="switchHmView(this, 'review-candidates')">
             <i data-lucide="user-check"></i>
-            <span>Shortlisted Candidates</span>
+            <span>Review Candidates</span>
           </a>
           <a href="#" class="nav-item" id="nav-review-feedback" onclick="switchHmView(this, 'review-feedback')">
             <i data-lucide="message-square"></i>
@@ -60,6 +60,11 @@
           <a href="#" class="nav-item" id="nav-hiring-decisions" onclick="switchHmView(this, 'hiring-decisions')">
             <i data-lucide="clipboard-list"></i>
             <span>Hiring Decisions</span>
+          </a>
+          <a href="#" class="nav-item" id="nav-notifications" onclick="switchHmView(this, 'notifications')">
+            <i data-lucide="bell"></i>
+            <span>Notifications</span>
+            <span class="badge" id="notif-badge" style="display: none;"></span>
           </a>
         </nav>
       </div>
@@ -97,15 +102,15 @@
         <div class="kanban-board" id="kanban-board"></div>
       </div>
 
-      <div id="shortlisted-view" style="display: none;">
+      <div id="review-candidates-view" style="display: none;">
         <header class="header">
-          <h1>Shortlisted Candidates</h1>
-          <p>Review top candidates who have moved into interviews, offers, or hires</p>
+          <h1>Review Candidates</h1>
+          <p>Candidates currently in review after their interview, awaiting a decision</p>
         </header>
 
-        <div class="metric-grid" id="shortlisted-stat-grid"></div>
+        <div class="metric-grid" id="review-candidates-stat-grid"></div>
 
-        <div id="shortlisted-list"></div>
+        <div id="review-candidates-list"></div>
       </div>
 
       <div id="review-feedback-view" style="display: none;">
@@ -131,11 +136,15 @@
 
         <div id="decisions-list"></div>
       </div>
+
+      <div id="notifications-view" style="display: none;">
+        <div class="notifications-container" id="notifications-container"></div>
+      </div>
     </main>
   </div>
 
-  <script src="../assets/js/theme.js"></script>
-  <script src="../assets/js/hiring_manager.js"></script>
+  <script src="../assets/js/theme.js?v=20260824"></script>
+  <script src="../assets/js/hiring_manager.js?v=20260824"></script>
 </body>
 
 </html>

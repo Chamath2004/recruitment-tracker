@@ -15,6 +15,9 @@ if ($conn->connect_error) {
     exit();
 }
 
+require_once __DIR__ . '/interview_helpers.php';
+autoCompletePastInterviews($conn);
+
 // Total applications
 $totalApplications = 0;
 $result = $conn->query("SELECT COUNT(*) AS cnt FROM applications");

@@ -15,10 +15,13 @@ if ($conn->connect_error) {
     exit();
 }
 
+require_once __DIR__ . '/interview_helpers.php';
+autoCompletePastInterviews($conn);
+
 $sql = "SELECT
             i.id, i.application_id, i.candidate_name, i.job_title, i.interview_type, i.interview_date, i.interview_time,
             i.interviewer, i.interviewer_id, i.mode,
-            f.id AS feedback_id, f.rating, f.recommendation, f.comments, f.updated_at AS feedback_updated_at,
+            f.id AS feedback_id, f.rating, f.recommendation, f.comments, f.created_at AS feedback_created_at, f.updated_at AS feedback_updated_at,
             CONCAT(a.first_name, ' ', a.last_name) AS submitted_by_name
         FROM interviews i
         LEFT JOIN interview_feedback f ON f.interview_id = i.id

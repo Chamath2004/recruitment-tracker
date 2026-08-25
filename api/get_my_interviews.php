@@ -15,6 +15,9 @@ if ($conn->connect_error) {
     exit();
 }
 
+require_once __DIR__ . '/interview_helpers.php';
+autoCompletePastInterviews($conn);
+
 $interviewerId = (int) $_SESSION['interviewer_id'];
 
 $stmt = $conn->prepare("

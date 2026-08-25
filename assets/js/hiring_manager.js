@@ -15,6 +15,16 @@ function starDisplay(rating) {
   return '★'.repeat(r) + '☆'.repeat(5 - r);
 }
 
+function recommendationLabel(rec) {
+  const map = { strong_yes: 'Strong Yes', yes: 'Yes', no: 'No', strong_no: 'Strong No' };
+  return map[rec] || rec;
+}
+
+function recommendationPillClass(rec) {
+  const map = { strong_yes: 'offer', yes: 'in-review', no: 'rejected', strong_no: 'rejected' };
+  return map[rec] || 'submitted';
+}
+
 function formatHmDate(dateStr) {
   if (!dateStr) return '';
   const d = new Date(dateStr.includes('T') ? dateStr : dateStr.replace(' ', 'T'));
@@ -46,17 +56,20 @@ function switchHmView(navEl, view) {
   navEl.classList.add('active');
 
   document.getElementById('pipeline-view').style.display = view === 'pipeline' ? 'block' : 'none';
-  document.getElementById('shortlisted-view').style.display = view === 'shortlisted' ? 'block' : 'none';
+  document.getElementById('review-candidates-view').style.display = view === 'review-candidates' ? 'block' : 'none';
   document.getElementById('review-feedback-view').style.display = view === 'review-feedback' ? 'block' : 'none';
   document.getElementById('hiring-decisions-view').style.display = view === 'hiring-decisions' ? 'block' : 'none';
+  document.getElementById('notifications-view').style.display = view === 'notifications' ? 'block' : 'none';
 
-  if (view === 'shortlisted') {
-    renderShortlisted();
+  if (view === 'review-candidates') {
+    renderReviewCandidates();
   } else if (view === 'review-feedback') {
     renderReviewFeedbackFilters();
     renderReviewFeedback();
   } else if (view === 'hiring-decisions') {
     renderDecisions();
+  } else if (view === 'notifications') {
+    loadHmNotifications();
   }
 }
 
@@ -91,7 +104,7 @@ function loadPipeline(callback) {
       pipelineLoaded = true;
       populateVacancySelect();
       renderKanban();
-      renderShortlisted();
+      renderReviewCandidates();
       renderDecisions();
       if (typeof callback === 'function') callback();
     })
@@ -171,7 +184,7 @@ function moveApplicationStatus(applicationId, status) {
         alert(result.message || 'Failed to update status.');
         return;
       }
-      renderShortlisted();
+      renderReviewCandidates();
       renderDecisions();
     })
     .catch(error => {
@@ -181,7 +194,7 @@ function moveApplicationStatus(applicationId, status) {
     });
 }
 
-// ================= SHORTLISTED CANDIDATES =================
+// ================= REVIEW CANDIDATES =================
 
 function getFeedbackForApplication(applicationId) {
   return feedbackData.filter(f => f.application_id === applicationId && f.feedback_id !== null);
@@ -192,19 +205,19 @@ function avgRating(items) {
   return items.reduce((sum, f) => sum + (f.rating || 0), 0) / items.length;
 }
 
-function renderShortlisted() {
-  const container = document.getElementById('shortlisted-list');
+function renderReviewCandidates() {
+  const container = document.getElementById('review-candidates-list');
   if (!container || !pipelineLoaded) return;
 
-  const shortlisted = pipelineApplications.filter(a => ['interview', 'offer', 'hired'].includes(a.status));
-  const withFeedback = shortlisted.filter(a => getFeedbackForApplication(a.id).length > 0);
-  const readyForOffer = shortlisted.filter(a => a.status === 'offer' || a.status === 'hired');
+  const inReview = pipelineApplications.filter(a => a.status === 'in-review');
+  const withFeedback = inReview.filter(a => getFeedbackForApplication(a.id).length > 0);
+  const awaitingFeedback = inReview.filter(a => getFeedbackForApplication(a.id).length === 0);
 
-  document.getElementById('shortlisted-stat-grid').innerHTML = `
+  document.getElementById('review-candidates-stat-grid').innerHTML = `
     <div class="metric-card">
       <div class="metric-top"><div class="metric-icon amber"><i data-lucide="star"></i></div></div>
-      <div class="metric-value">${shortlisted.length}</div>
-      <div class="metric-label">Total Shortlisted</div>
+      <div class="metric-value">${inReview.length}</div>
+      <div class="metric-label">Total In Review</div>
     </div>
     <div class="metric-card">
       <div class="metric-top"><div class="metric-icon green"><i data-lucide="message-square"></i></div></div>
@@ -213,14 +226,14 @@ function renderShortlisted() {
     </div>
     <div class="metric-card">
       <div class="metric-top"><div class="metric-icon purple"><i data-lucide="check-circle-2"></i></div></div>
-      <div class="metric-value">${readyForOffer.length}</div>
-      <div class="metric-label">Ready for Offer / Hired</div>
+      <div class="metric-value">${awaitingFeedback.length}</div>
+      <div class="metric-label">Awaiting Feedback</div>
     </div>
   `;
 
-  container.innerHTML = shortlisted.length === 0
-    ? `<div class="hm-empty-state"><i data-lucide="user-check"></i><p>No shortlisted candidates yet — move candidates to Interview or beyond on the Pipeline Board.</p></div>`
-    : shortlisted.map(a => {
+  container.innerHTML = inReview.length === 0
+    ? `<div class="hm-empty-state"><i data-lucide="user-check"></i><p>No candidates in review yet — candidates move here once an interviewer submits feedback.</p></div>`
+    : inReview.map(a => {
       const fb = getFeedbackForApplication(a.id);
       const avg = avgRating(fb);
       return `
@@ -277,7 +290,7 @@ function loadFeedback() {
       feedbackLoaded = true;
       renderReviewFeedbackFilters();
       renderReviewFeedback();
-      renderShortlisted();
+      renderReviewCandidates();
       renderDecisions();
     })
     .catch(error => console.error('Error loading feedback:', error));
@@ -328,15 +341,24 @@ function renderReviewFeedback() {
             <div class="hm-feedback-header-sub">${group.job_title} · ${group.items.length} feedback item${group.items.length > 1 ? 's' : ''}</div>
           </div>
         </div>
-        ${group.items.map(f => `
+        ${group.items.map(f => {
+          const wasEdited = f.feedback_created_at && f.feedback_updated_at && f.feedback_updated_at !== f.feedback_created_at;
+          return `
           <div class="hm-feedback-item">
             <div class="hm-feedback-item-top">
               <span class="hm-feedback-item-name">${f.submitted_by_name || 'Interviewer'} · ${f.interview_type}</span>
-              <span class="feedback-stars">${starDisplay(f.rating)}</span>
+              <div style="display:flex;align-items:center;gap:8px;">
+                ${f.recommendation ? `<span class="stage-pill ${recommendationPillClass(f.recommendation)}">${recommendationLabel(f.recommendation)}</span>` : ''}
+                <span class="feedback-stars">${starDisplay(f.rating)}</span>
+              </div>
+            </div>
+            <div class="hm-feedback-item-meta" style="display:flex;align-items:center;gap:6px;margin-top:4px;">
+              ${wasEdited ? `<span class="stage-pill in-review">Feedback edited</span><span style="font-size:12px;color:var(--text-muted);">${timeAgo(f.feedback_updated_at)}</span>` : `<span style="font-size:12px;color:var(--text-muted);">Submitted ${timeAgo(f.feedback_created_at)}</span>`}
             </div>
             <p class="hm-feedback-notes">${f.comments || 'No comments provided.'}</p>
           </div>
-        `).join('')}
+        `;
+        }).join('')}
       </div>
     `).join('');
 
@@ -459,3 +481,157 @@ collapseBtn.addEventListener('click', () => {
 
   lucide.createIcons();
 });
+
+// ================= NOTIFICATIONS =================
+
+function timeAgo(mysqlDatetime) {
+  const then = new Date(mysqlDatetime.replace(" ", "T"));
+  const diffSec = Math.floor((Date.now() - then.getTime()) / 1000);
+
+  if (diffSec < 60) return "Just now";
+  const diffMin = Math.floor(diffSec / 60);
+  if (diffMin < 60) return `${diffMin} minute${diffMin > 1 ? "s" : ""} ago`;
+  const diffHr = Math.floor(diffMin / 60);
+  if (diffHr < 24) return `${diffHr} hour${diffHr > 1 ? "s" : ""} ago`;
+  const diffDay = Math.floor(diffHr / 24);
+  if (diffDay < 7) return `${diffDay} day${diffDay > 1 ? "s" : ""} ago`;
+  return then.toLocaleDateString();
+}
+
+const notifTypeIcon = {
+  info: "info",
+  success: "check-circle-2",
+  warning: "alert-triangle",
+  reminder: "bell"
+};
+
+function refreshHmNotifBadge() {
+  fetch('../api/get_hm_notifications.php')
+    .then(response => response.json())
+    .then(result => {
+      const badge = document.getElementById('notif-badge');
+      if (!result.success || !badge) return;
+      if (result.unread_count > 0) {
+        badge.textContent = result.unread_count;
+        badge.style.display = "inline-block";
+      } else {
+        badge.style.display = "none";
+      }
+    })
+    .catch(error => console.error('Error loading notification count:', error));
+}
+
+refreshHmNotifBadge();
+
+function loadHmNotifications() {
+  const container = document.getElementById('notifications-container');
+  fetch('../api/get_hm_notifications.php')
+    .then(response => response.json())
+    .then(result => {
+      if (!result.success) {
+        container.innerHTML = `<p class="notif-empty">Failed to load notifications.</p>`;
+        return;
+      }
+      renderHmNotifications(result.data);
+    })
+    .catch(error => console.error('Error loading notifications:', error));
+}
+
+function renderHmNotifications(notifs) {
+  const container = document.getElementById('notifications-container');
+  const unreadCount = notifs.filter(n => !n.is_read).length;
+
+  let html = `
+    <div class="notif-header">
+      <div>
+        <h1>Notifications</h1>
+        <p>${unreadCount > 0 ? `${unreadCount} unread notification${unreadCount > 1 ? "s" : ""}` : "All caught up!"}</p>
+      </div>
+      ${unreadCount > 0 ? `
+        <button class="notif-mark-all-btn" onclick="markAllHmNotificationsRead()">
+          <i data-lucide="check"></i> Mark all as read
+        </button>
+      ` : ""}
+    </div>
+    <div class="notif-list">
+  `;
+
+  if (notifs.length === 0) {
+    html += `
+      <div class="notif-empty">
+        <i data-lucide="bell" style="width: 48px; height: 48px;"></i>
+        <p>No notifications</p>
+      </div>
+    `;
+  } else {
+    notifs.forEach(notif => {
+      html += `
+        <div class="notif-card ${notif.is_read ? "" : "unread"}">
+          <div class="notif-icon ${notif.type}">
+            <i data-lucide="${notifTypeIcon[notif.type] || "info"}"></i>
+          </div>
+          <div class="notif-body">
+            <p class="notif-message ${notif.is_read ? "" : "unread"}">${notif.message}</p>
+            <p class="notif-timestamp">${timeAgo(notif.created_at)}</p>
+          </div>
+          <div class="notif-actions">
+            ${!notif.is_read ? `
+              <button class="notif-action-btn" title="Mark as read" onclick="markHmNotificationRead(${notif.id})">
+                <i data-lucide="check"></i>
+              </button>
+            ` : ""}
+            <button class="notif-action-btn delete" title="Delete" onclick="deleteHmNotificationItem(${notif.id})">
+              <i data-lucide="trash-2"></i>
+            </button>
+          </div>
+        </div>
+      `;
+    });
+  }
+
+  html += `</div>`;
+  container.innerHTML = html;
+  lucide.createIcons();
+}
+
+function markHmNotificationRead(id) {
+  fetch('../api/mark_hm_notification_read.php', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ id })
+  })
+    .then(response => response.json())
+    .then(() => {
+      loadHmNotifications();
+      refreshHmNotifBadge();
+    })
+    .catch(error => console.error('Error marking notification read:', error));
+}
+
+function markAllHmNotificationsRead() {
+  fetch('../api/mark_all_hm_notifications_read.php', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({})
+  })
+    .then(response => response.json())
+    .then(() => {
+      loadHmNotifications();
+      refreshHmNotifBadge();
+    })
+    .catch(error => console.error('Error marking all notifications read:', error));
+}
+
+function deleteHmNotificationItem(id) {
+  fetch('../api/delete_hm_notification.php', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ id })
+  })
+    .then(response => response.json())
+    .then(() => {
+      loadHmNotifications();
+      refreshHmNotifBadge();
+    })
+    .catch(error => console.error('Error deleting notification:', error));
+}

@@ -1121,7 +1121,7 @@ function loadUserApplications() {
             <p class="app-list-subheading" style="margin-bottom: 24px;">Track the progress of your job applications</p>
         `;
 
-        const interviewModeLabel = { video: 'Video Call', phone: 'Phone', onsite: 'Onsite' };
+        const interviewModeLabel = { video: 'Google Meet', phone: 'Phone', onsite: 'Onsite' };
 
         apps.forEach(app => {
           const formattedDate = app.created_at ? app.created_at.split(' ')[0] : 'Recent';

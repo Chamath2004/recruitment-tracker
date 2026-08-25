@@ -350,10 +350,6 @@ function openVacancyModal(id) {
             </div>
           </div>
           <div class="form-group">
-            <label>Salary Range</label>
-            <input type="text" id="vf-salary" value="${vacancy ? vacancy.salary : ''}" placeholder="$100k - $150k">
-          </div>
-          <div class="form-group">
             <label>Description</label>
             <textarea id="vf-description" rows="3" placeholder="Job description...">${vacancy ? vacancy.description : ''}</textarea>
           </div>
@@ -396,7 +392,6 @@ function saveVacancy(id) {
     title: document.getElementById('vf-title').value.trim(),
     department: document.getElementById('vf-department').value.trim(),
     type: document.getElementById('vf-type').value,
-    salary: document.getElementById('vf-salary').value.trim(),
     description: document.getElementById('vf-description').value.trim(),
     requirements: document.getElementById('vf-requirements').value.trim(),
     pipeline_stages: document.getElementById('vf-stages').value.trim(),
@@ -848,7 +843,7 @@ function setInterviewFilter(status) {
 }
 
 function interviewModeLabel(mode) {
-  const map = { video: 'Video Call', phone: 'Phone', onsite: 'Onsite' };
+  const map = { video: 'Google Meet', phone: 'Phone', onsite: 'Onsite' };
   return map[mode] || mode;
 }
 
@@ -906,6 +901,25 @@ function renderInterviewList() {
   lucide.createIcons();
 }
 
+function getTodayDateStr() {
+  const now = new Date();
+  const offset = now.getTimezoneOffset();
+  return new Date(now.getTime() - offset * 60000).toISOString().slice(0, 10);
+}
+
+function updateInterviewTimeMin() {
+  const dateEl = document.getElementById('if-date');
+  const timeEl = document.getElementById('if-time');
+  if (!dateEl || !timeEl) return;
+
+  if (dateEl.value === getTodayDateStr()) {
+    const now = new Date();
+    timeEl.min = `${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`;
+  } else {
+    timeEl.removeAttribute('min');
+  }
+}
+
 function openInterviewModal(id) {
   const interview = id ? interviewList.find(iv => iv.id === id) : null;
 
@@ -945,7 +959,7 @@ function openInterviewModal(id) {
           <div class="form-grid-2">
             <div class="form-group">
               <label>Date *</label>
-              <input type="date" id="if-date" value="${interview ? interview.interview_date : ''}" onchange="autoFillMeetingLink()">
+              <input type="date" id="if-date" min="${getTodayDateStr()}" value="${interview ? interview.interview_date : ''}" onchange="updateInterviewTimeMin(); autoFillMeetingLink()">
             </div>
             <div class="form-group">
               <label>Time *</label>
@@ -966,17 +980,16 @@ function openInterviewModal(id) {
             </div>
             <div class="form-group">
               <label>Mode</label>
-              <select id="if-mode" onchange="autoFillMeetingLink()">
-                <option value="video" ${!interview || interview.mode === 'video' ? 'selected' : ''}>Video Call</option>
-                <option value="phone" ${interview && interview.mode === 'phone' ? 'selected' : ''}>Phone</option>
+              <select id="if-mode" onchange="updateMeetingLinkControls(); autoFillMeetingLink()">
+                <option value="video" ${!interview || interview.mode === 'video' ? 'selected' : ''}>Google Meet</option>
                 <option value="onsite" ${interview && interview.mode === 'onsite' ? 'selected' : ''}>Onsite</option>
               </select>
             </div>
           </div>
           <div class="form-group">
-            <label>Interviewer</label>
+            <label>Interviewer *</label>
             <select id="if-interviewer">
-              <option value="">Unassigned</option>
+              <option value="">Select an interviewer...</option>
               ${interviewerOptionsList.map(iv => `
                 <option value="${iv.id}" ${interview && interview.interviewer_id === iv.id ? 'selected' : ''}>${iv.name}</option>
               `).join('')}
@@ -986,7 +999,7 @@ function openInterviewModal(id) {
           <div class="form-group">
             <label>Meeting Link / Location</label>
             <input type="text" id="if-link" data-auto="${interview && interview.meeting_link ? 'false' : 'true'}" oninput="this.dataset.auto='false'" value="${interview ? interview.meeting_link || '' : ''}" placeholder="Enter an office address, or generate a Google Meet link">
-            <button type="button" class="link-generate-btn" onclick="autoFillMeetingLink(true)">
+            <button type="button" class="link-generate-btn" id="if-link-generate-btn" onclick="autoFillMeetingLink(true)">
               <i data-lucide="video"></i> Generate Meet Link
             </button>
           </div>
@@ -1005,7 +1018,20 @@ function openInterviewModal(id) {
 
   document.getElementById('modal-root').innerHTML = modalHtml;
   lucide.createIcons();
+  updateInterviewTimeMin();
+  updateMeetingLinkControls();
   autoFillMeetingLink();
+}
+
+function updateMeetingLinkControls() {
+  const modeEl = document.getElementById('if-mode');
+  const generateBtn = document.getElementById('if-link-generate-btn');
+  const linkEl = document.getElementById('if-link');
+  if (!modeEl || !generateBtn || !linkEl) return;
+
+  const isOnsite = modeEl.value === 'onsite';
+  generateBtn.style.display = isOnsite ? 'none' : '';
+  linkEl.placeholder = isOnsite ? 'Enter an office address or meeting location' : 'Enter a location, or generate a Google Meet link';
 }
 
 function autoFillMeetingLink(force) {
@@ -1097,8 +1123,14 @@ function saveInterview(id) {
     notes: document.getElementById('if-notes').value.trim()
   };
 
-  if (!payload.application_id || !payload.interview_type || !payload.interview_date || !payload.interview_time) {
-    alert('Please select a candidate and fill in the interview type, date, and time.');
+  if (!payload.application_id || !payload.interview_type || !payload.interview_date || !payload.interview_time || !payload.interviewer_id) {
+    alert('Please select a candidate, interviewer, and fill in the interview type, date, and time.');
+    return;
+  }
+
+  const scheduledAt = new Date(`${payload.interview_date}T${payload.interview_time}`);
+  if (scheduledAt < new Date()) {
+    alert('Please select a future date and time for the interview.');
     return;
   }
 
@@ -1147,7 +1179,29 @@ function confirmCancelInterview(id) {
 }
 
 function markInterviewCompleted(id) {
-  runInterviewStatusChange(id, 'completed');
+  const interview = interviewList.find(iv => iv.id === id);
+  if (!interview) return;
+
+  const modalHtml = `
+    <div class="modal-overlay" id="confirm-modal-overlay" onclick="if(event.target===this) closeConfirmModal()">
+      <div class="modal-dialog confirm-modal-dialog">
+        <div class="modal-header">
+          <h2>Mark Interview Completed</h2>
+          <button class="modal-close-btn" onclick="closeConfirmModal()"><i data-lucide="x"></i></button>
+        </div>
+        <div class="modal-body">
+          <p class="confirm-modal-message">Are you sure you want to mark the ${interview.interview_type} interview with <strong>${interview.candidate_name}</strong> as completed?</p>
+        </div>
+        <div class="modal-footer">
+          <button class="modal-cancel-btn" onclick="closeConfirmModal()">Cancel</button>
+          <button class="modal-save-btn" onclick="runInterviewStatusChange(${id}, 'completed')">Mark Completed</button>
+        </div>
+      </div>
+    </div>
+  `;
+
+  document.getElementById('modal-root').innerHTML = modalHtml;
+  lucide.createIcons();
 }
 
 function runInterviewStatusChange(id, status) {

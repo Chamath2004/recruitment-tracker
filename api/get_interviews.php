@@ -15,6 +15,9 @@ if ($conn->connect_error) {
     exit();
 }
 
+require_once __DIR__ . '/interview_helpers.php';
+autoCompletePastInterviews($conn);
+
 $interviews = [];
 $result = $conn->query("SELECT * FROM interviews ORDER BY interview_date ASC, interview_time ASC");
 if ($result) {

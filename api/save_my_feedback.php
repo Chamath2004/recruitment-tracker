@@ -72,6 +72,22 @@ $appStmt->bind_param("i", $interviewId);
 $appStmt->execute();
 $appStmt->close();
 
+$ivStmt = $conn->prepare("SELECT candidate_name, job_title, interviewer FROM interviews WHERE id = ?");
+$ivStmt->bind_param("i", $interviewId);
+$ivStmt->execute();
+$ivDetails = $ivStmt->get_result()->fetch_assoc();
+$ivStmt->close();
+
+if ($ivDetails) {
+    $interviewerName = $ivDetails['interviewer'] ?: 'The interviewer';
+    $message = "$interviewerName submitted feedback for {$ivDetails['candidate_name']} — {$ivDetails['job_title']} interview.";
+
+    $hmStmt = $conn->prepare("INSERT INTO notifications (hiring_manager_id, message, type) SELECT id, ?, 'info' FROM hiring_managers");
+    $hmStmt->bind_param("s", $message);
+    $hmStmt->execute();
+    $hmStmt->close();
+}
+
 echo json_encode(["success" => true]);
 
 $conn->close();

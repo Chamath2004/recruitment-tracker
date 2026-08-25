@@ -150,6 +150,9 @@ function renderMyInterviews() {
                 <i data-lucide="video"></i> Join
               </a>
             ` : ''}
+            <button class="feedback-add-btn" onclick="markMyInterviewCompleted(${iv.id})">
+              <i data-lucide="check"></i> Mark completed
+            </button>
           </div>
         </div>
       `;
@@ -193,6 +196,23 @@ function renderMyInterviews() {
     `).join('');
 
   lucide.createIcons();
+}
+
+function markMyInterviewCompleted(id) {
+  fetch('../api/update_my_interview_status.php', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ id })
+  })
+    .then(response => response.json())
+    .then(result => {
+      if (!result.success) {
+        alert(result.message || 'Failed to update interview status.');
+        return;
+      }
+      loadMyInterviews();
+    })
+    .catch(error => console.error('Error marking interview completed:', error));
 }
 
 // ================= SUBMIT FEEDBACK =================
