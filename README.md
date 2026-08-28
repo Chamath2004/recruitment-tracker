@@ -1,7 +1,7 @@
 # Project Name
 
 ### Group Members & Roles:
-1.Hashini De Silva (CB015618)
+1. Hashini De Silva (CB015618)
 - Designed and implemented the Hiring Manager webpage as part of the system.
 - Rechecked the completed webpage to verify that the features and interactions were functioning correctly and identified issues that needed attention.
   
