@@ -2156,3 +2156,365 @@ collapseBtn.addEventListener('click', () => {
 
   lucide.createIcons();
 });
+
+// ================= CV SCREENING (AUTO FILTER) =================
+// Rule-based skill matching, done entirely in the browser: PDF text is
+// extracted client-side with pdf.js, matched against the vacancy's
+// requirements, and scored. No external AI/embedding service involved.
+
+if (typeof pdfjsLib !== 'undefined') {
+  pdfjsLib.GlobalWorkerOptions.workerSrc = "https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js";
+}
+
+const CVS_SYNONYMS = {
+  "js": ["javascript"], "javascript": ["js"],
+  "ts": ["typescript"], "typescript": ["ts"],
+  "node": ["nodejs", "node.js"], "nodejs": ["node", "node.js"], "node.js": ["node", "nodejs"],
+  "react": ["reactjs", "react.js"], "reactjs": ["react"],
+  "vue": ["vuejs", "vue.js"],
+  "angular": ["angularjs"],
+  "sql": ["mysql", "postgresql", "postgres", "sqlite", "mssql"],
+  "mysql": ["sql"], "postgresql": ["sql", "postgres"], "postgres": ["sql", "postgresql"],
+  "html": ["html5"], "css": ["css3"],
+  "aws": ["amazon web services"],
+  "gcp": ["google cloud", "google cloud platform"],
+  "ml": ["machine learning"], "machine learning": ["ml"],
+  "ai": ["artificial intelligence"],
+  "ui": ["user interface"], "ux": ["user experience"],
+  "php": ["laravel", "symfony"],
+  "c#": ["csharp", ".net", "dotnet"],
+  "python": ["django", "flask"]
+};
+
+let cvsVacancies = [];
+let cvsResults = [];
+let cvsThreshold = 60;
+
+function openCvScreeningModal() {
+  fetch('../api/get_vacancies.php')
+    .then(response => response.json())
+    .then(result => {
+      cvsVacancies = result.success ? result.data : [];
+      renderCvScreeningModal();
+    })
+    .catch(error => {
+      console.error('Error loading vacancies:', error);
+      cvsVacancies = [];
+      renderCvScreeningModal();
+    });
+}
+
+function renderCvScreeningModal() {
+  cvsResults = [];
+
+  const modalHtml = `
+    <div class="modal-overlay" id="cvs-modal-overlay" onclick="if(event.target===this) closeCvScreeningModal()">
+      <div class="modal-dialog wide">
+        <div class="modal-header">
+          <h2>Auto Filter CVs</h2>
+          <button class="modal-close-btn" onclick="closeCvScreeningModal()"><i data-lucide="x"></i></button>
+        </div>
+        <div class="modal-body">
+          <div class="cvs-criteria-grid">
+            <div class="form-group" style="grid-column: span 2;">
+              <label>Job Role</label>
+              <select id="cvs-vacancy-select" onchange="onCvsVacancyChange()">
+                <option value="">Select a vacancy...</option>
+                ${cvsVacancies.map(v => `<option value="${v.id}">${v.title}${v.applicants ? ` (${v.applicants} applicant${v.applicants === 1 ? '' : 's'})` : ''}</option>`).join('')}
+              </select>
+            </div>
+            <div class="form-group" style="grid-column: span 2;">
+              <label>Must-Have Skills</label>
+              <input type="text" id="cvs-must" placeholder="e.g. React, JavaScript, REST API">
+              <p class="cvs-hint">Comma-separated. Auto-filled from the vacancy's requirements — edit freely.</p>
+            </div>
+            <div class="form-group">
+              <label>Nice-to-Have Skills</label>
+              <input type="text" id="cvs-nice" placeholder="e.g. TypeScript, AWS">
+            </div>
+            <div class="form-group">
+              <label>Minimum Years of Experience</label>
+              <input type="number" id="cvs-years" min="0" placeholder="e.g. 2">
+            </div>
+          </div>
+
+          <button class="cvs-run-btn" id="cvs-run-btn" onclick="runCvScreening()" disabled>
+            <i data-lucide="scan-search"></i> Run Screening
+          </button>
+
+          <div id="cvs-controls" style="display:none;">
+            <div class="cvs-controls-row">
+              <div class="cvs-summary-line" id="cvs-summary-line"></div>
+              <div class="cvs-threshold">
+                Pass threshold
+                <input type="range" id="cvs-threshold-slider" min="0" max="100" value="60" oninput="onCvsThresholdChange()">
+                <span class="cvs-th-val" id="cvs-th-val">60%</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="cvs-results-list" id="cvs-results-list">
+            <div class="cvs-empty">Pick a job role and click Run Screening to see ranked candidates here.</div>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button class="modal-cancel-btn" onclick="closeCvScreeningModal()">Close</button>
+          <button class="modal-save-btn" id="cvs-shortlist-all-btn" onclick="shortlistAllPassingFromScreening()" disabled>
+            Shortlist All Passing
+          </button>
+        </div>
+      </div>
+    </div>
+  `;
+
+  document.getElementById('modal-root').innerHTML = modalHtml;
+  lucide.createIcons();
+}
+
+function closeCvScreeningModal() {
+  document.getElementById('modal-root').innerHTML = '';
+}
+
+function onCvsVacancyChange() {
+  const select = document.getElementById('cvs-vacancy-select');
+  const vacancy = cvsVacancies.find(v => String(v.id) === select.value);
+  document.getElementById('cvs-must').value = vacancy ? (vacancy.requirements || '') : '';
+  document.getElementById('cvs-run-btn').disabled = !vacancy;
+}
+
+function onCvsThresholdChange() {
+  cvsThreshold = parseInt(document.getElementById('cvs-threshold-slider').value, 10);
+  document.getElementById('cvs-th-val').textContent = cvsThreshold + '%';
+  renderCvScreeningResultsList();
+}
+
+function cvsParseSkillList(raw) {
+  return raw.split(',').map(s => s.trim()).filter(Boolean);
+}
+
+function cvsTextContainsSkill(text, skill) {
+  const terms = [skill, ...(CVS_SYNONYMS[skill.toLowerCase()] || [])];
+  return terms.some(term => {
+    const escaped = term.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+    const pattern = /^[a-z0-9#.]+$/i.test(term)
+      ? new RegExp(`(?:^|[^a-z0-9])${escaped}(?:$|[^a-z0-9])`, "i")
+      : new RegExp(escaped, "i");
+    return pattern.test(text);
+  });
+}
+
+function cvsDetectYears(text) {
+  const nearWord = text.match(/(\d+)\+?\s*(?:years?|yrs?)(?:\s+of)?\s+experience/i);
+  if (nearWord) return parseInt(nearWord[1], 10);
+  const bare = text.match(/(\d+)\+?\s*(?:years?|yrs?)\b/i);
+  if (bare) return parseInt(bare[1], 10);
+  return 0;
+}
+
+async function cvsExtractPdfText(url) {
+  const response = await fetch(url);
+  if (!response.ok) throw new Error('Failed to fetch resume');
+  const buffer = await response.arrayBuffer();
+  const pdf = await pdfjsLib.getDocument({ data: buffer }).promise;
+  let fullText = "";
+  for (let i = 1; i <= pdf.numPages; i++) {
+    const page = await pdf.getPage(i);
+    const content = await page.getTextContent();
+    fullText += content.items.map(item => item.str).join(" ") + "\n";
+  }
+  return fullText;
+}
+
+function cvsScoreCandidate(text, mustSkills, niceSkills, minYears) {
+  const mustMatches = mustSkills.filter(s => cvsTextContainsSkill(text, s));
+  const missingMust = mustSkills.filter(s => !mustMatches.includes(s));
+  const niceMatches = niceSkills.filter(s => cvsTextContainsSkill(text, s));
+  const years = cvsDetectYears(text);
+
+  const mustScore = mustSkills.length ? mustMatches.length / mustSkills.length : 1;
+  const niceScore = niceSkills.length ? niceMatches.length / niceSkills.length : 1;
+  const expScore = minYears > 0 ? Math.min(years / minYears, 1) : 1;
+
+  let overall = (mustScore * 0.65) + (niceScore * 0.20) + (expScore * 0.15);
+  const hardFail = mustSkills.length > 0 && mustMatches.length === 0;
+  if (hardFail) overall = Math.min(overall, 0.3);
+
+  const percentage = Math.round(overall * 100);
+
+  const summaryParts = [];
+  summaryParts.push(mustMatches.length > 0
+    ? `Matches ${mustMatches.length}/${mustSkills.length} must-have skill${mustSkills.length === 1 ? '' : 's'} (${mustMatches.join(", ")}).`
+    : (mustSkills.length > 0 ? "Does not clearly demonstrate any of the required must-have skills." : "No must-have skills were specified."));
+  summaryParts.push(missingMust.length > 0 ? `Missing: ${missingMust.join(", ")}.` : "No major skill gaps against the listed requirements.");
+  if (minYears > 0) {
+    summaryParts.push(years >= minYears
+      ? `Detected ~${years} years of experience, meeting the ${minYears}-year requirement.`
+      : `Detected ~${years} years of experience, below the ${minYears}-year requirement.`);
+  } else if (years > 0) {
+    summaryParts.push(`Detected ~${years} years of experience.`);
+  }
+
+  return { percentage, mustMatches, missingMust, niceMatches, years, summary: summaryParts.join(" ") };
+}
+
+async function runCvScreening() {
+  const select = document.getElementById('cvs-vacancy-select');
+  const vacancy = cvsVacancies.find(v => String(v.id) === select.value);
+  if (!vacancy) return;
+
+  const mustSkills = cvsParseSkillList(document.getElementById('cvs-must').value);
+  const niceSkills = cvsParseSkillList(document.getElementById('cvs-nice').value);
+  const minYears = parseInt(document.getElementById('cvs-years').value, 10) || 0;
+
+  if (mustSkills.length === 0 && niceSkills.length === 0) {
+    alert('Add at least one must-have or nice-to-have skill first.');
+    return;
+  }
+
+  const candidates = manageCandidatesList.filter(c => c.job_title === vacancy.title && c.status !== 'rejected');
+
+  if (candidates.length === 0) {
+    alert('No non-rejected candidates have applied for this role yet.');
+    return;
+  }
+
+  const runBtn = document.getElementById('cvs-run-btn');
+  runBtn.disabled = true;
+  runBtn.innerHTML = `<i data-lucide="loader-2" class="cvs-spin"></i> Reading CVs...`;
+  lucide.createIcons();
+
+  cvsResults = [];
+
+  for (const c of candidates) {
+    const isPdf = (c.resume_name || '').toLowerCase().endsWith('.pdf');
+    if (!c.resume_name || !isPdf) {
+      cvsResults.push({
+        applicationId: c.id, name: c.full_name || c.email, shortlisted: c.shortlisted,
+        percentage: 0, mustMatches: [], missingMust: mustSkills, niceMatches: [], years: 0,
+        summary: c.resume_name ? "Resume is not a PDF — could not be auto-screened." : "No resume on file — could not be auto-screened.",
+        unscreenable: true
+      });
+      continue;
+    }
+
+    try {
+      const text = await cvsExtractPdfText(`../api/download_resume.php?application_id=${c.id}&mode=view`);
+      const scored = cvsScoreCandidate(text, mustSkills, niceSkills, minYears);
+      cvsResults.push({ applicationId: c.id, name: c.full_name || c.email, shortlisted: c.shortlisted, ...scored });
+    } catch (err) {
+      console.error('Failed to screen candidate ' + c.id, err);
+      cvsResults.push({
+        applicationId: c.id, name: c.full_name || c.email, shortlisted: c.shortlisted,
+        percentage: 0, mustMatches: [], missingMust: mustSkills, niceMatches: [], years: 0,
+        summary: "Could not read this resume file.", unscreenable: true
+      });
+    }
+  }
+
+  cvsResults.sort((a, b) => b.percentage - a.percentage);
+
+  runBtn.disabled = false;
+  runBtn.innerHTML = `<i data-lucide="scan-search"></i> Re-Run Screening`;
+  document.getElementById('cvs-controls').style.display = 'block';
+  document.getElementById('cvs-shortlist-all-btn').disabled = false;
+  cvsThreshold = parseInt(document.getElementById('cvs-threshold-slider').value, 10);
+  renderCvScreeningResultsList();
+}
+
+function cvsScoreColor(pct) {
+  if (pct >= 75) return 'var(--badge-green-text)';
+  if (pct >= 50) return 'var(--primary-green)';
+  return 'var(--badge-red)';
+}
+
+function renderCvScreeningResultsList() {
+  const listEl = document.getElementById('cvs-results-list');
+  const passed = cvsResults.filter(c => c.percentage >= cvsThreshold);
+
+  document.getElementById('cvs-summary-line').innerHTML =
+    `<strong>${passed.length}</strong> of <strong>${cvsResults.length}</strong> candidates pass at ${cvsThreshold}%+`;
+
+  if (cvsResults.length === 0) {
+    listEl.innerHTML = `<div class="cvs-empty">No results yet.</div>`;
+    return;
+  }
+
+  listEl.innerHTML = cvsResults.map(c => {
+    const passes = c.percentage >= cvsThreshold;
+    const color = cvsScoreColor(c.percentage);
+    return `
+      <div class="cvs-candidate-card ${passes ? '' : 'below-threshold'}">
+        <div class="cvs-cand-top">
+          <div>
+            <div class="cvs-cand-name">${c.name}</div>
+            <div class="cvs-cand-meta">${c.years > 0 ? `~${c.years} yrs experience` : 'Experience not detected'}</div>
+          </div>
+          <div class="cvs-score-ring">
+            <div class="cvs-score-bg" style="background: conic-gradient(${color} ${c.percentage * 3.6}deg, var(--bg-input) 0deg);"></div>
+            <span style="color:${color};">${c.percentage}%</span>
+          </div>
+        </div>
+        <p class="cvs-cand-summary">${c.summary}</p>
+        ${(c.mustMatches.length > 0 || c.missingMust.length > 0) ? `
+          <div class="cvs-skill-tags">
+            ${c.mustMatches.map(s => `<span class="cvs-skill-tag matched">✓ ${s}</span>`).join("")}
+            ${c.missingMust.map(s => `<span class="cvs-skill-tag missing">✕ ${s}</span>`).join("")}
+            ${(c.niceMatches || []).map(s => `<span class="cvs-skill-tag nice">${s}</span>`).join("")}
+          </div>` : ''}
+        <div class="cvs-cand-footer">
+          <span class="cvs-status-pill ${passes ? 'pass' : 'fail'}">${c.unscreenable ? 'Not screened' : (passes ? 'Passes threshold' : 'Below threshold')}</span>
+          <button class="cvs-mini-shortlist-btn" onclick="shortlistOneFromScreening(${c.applicationId}, this)" ${c.shortlisted ? 'disabled' : ''}>
+            ${c.shortlisted ? 'Already shortlisted' : 'Shortlist'}
+          </button>
+        </div>
+      </div>
+    `;
+  }).join('');
+
+  lucide.createIcons();
+}
+
+function shortlistOneFromScreening(applicationId, btnEl) {
+  fetch('../api/update_candidate_review.php', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ application_id: applicationId, action: 'shortlist' })
+  })
+    .then(response => response.json())
+    .then(result => {
+      if (!result.success) {
+        alert(result.message || 'Failed to shortlist candidate.');
+        return;
+      }
+      const cand = cvsResults.find(c => c.applicationId === applicationId);
+      if (cand) cand.shortlisted = true;
+      if (btnEl) { btnEl.disabled = true; btnEl.textContent = 'Already shortlisted'; }
+      loadManageCandidates();
+    })
+    .catch(error => console.error('Error shortlisting candidate:', error));
+}
+
+function shortlistAllPassingFromScreening() {
+  const passing = cvsResults.filter(c => c.percentage >= cvsThreshold && !c.shortlisted && !c.unscreenable);
+
+  if (passing.length === 0) {
+    alert('No new candidates to shortlist at this threshold.');
+    return;
+  }
+
+  if (!confirm(`Shortlist ${passing.length} candidate${passing.length === 1 ? '' : 's'} who passed this screening?`)) return;
+
+  Promise.all(passing.map(c =>
+    fetch('../api/update_candidate_review.php', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ application_id: c.applicationId, action: 'shortlist' })
+    }).then(r => r.json())
+  )).then(results => {
+    const successCount = results.filter(r => r.success).length;
+    passing.forEach(c => { c.shortlisted = true; });
+    renderCvScreeningResultsList();
+    loadManageCandidates();
+    alert(`Shortlisted ${successCount} of ${passing.length} candidates.`);
+  });
+}

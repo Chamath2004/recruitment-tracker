@@ -9,11 +9,12 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
   <script src="https://unpkg.com/lucide@latest"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
   <script>
     document.documentElement.setAttribute('data-theme', localStorage.getItem('theme') || 'dark');
   </script>
   <link rel="stylesheet" href="../assets/css/Candidate.css?v=20260824">
-  <link rel="stylesheet" href="../assets/css/hr.css?v=20260824">
+  <link rel="stylesheet" href="../assets/css/hr.css?v=20260913c">
   <link rel="stylesheet" href="../assets/css/theme_vision.css?v=2">
 </head>
 
@@ -174,10 +175,15 @@
       </div>
 
       <div id="manage-candidates-view" style="display: none;">
-        <header class="header">
-          <h1>Manage Candidates</h1>
-          <p>Review submitted applications and shortlist candidates for hiring managers to work with</p>
-        </header>
+        <div class="view-header-row">
+          <div>
+            <h1 style="font-size: 24px; font-weight: 700; margin-bottom: 4px;">Manage Candidates</h1>
+            <p style="font-size: 14px; color: var(--text-muted);">Review submitted applications and shortlist candidates for hiring managers to work with</p>
+          </div>
+          <button class="new-vacancy-btn" onclick="openCvScreeningModal()">
+            <i data-lucide="scan-search"></i> Auto Filter CVs
+          </button>
+        </div>
 
         <div class="vacancy-toolbar">
           <div class="vacancy-search-wrapper">
@@ -458,7 +464,7 @@
   <div id="modal-root"></div>
 
   <script src="../assets/js/theme.js?v=20260824"></script>
-  <script src="../assets/js/hr.js?v=20260824"></script>
+  <script src="../assets/js/hr.js?v=20260913"></script>
 </body>
 
 </html>

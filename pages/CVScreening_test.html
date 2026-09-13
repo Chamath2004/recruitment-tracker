@@ -1,0 +1,552 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Altrium - CV Screening (Test)</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<script src="https://unpkg.com/lucide@latest"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+<style>
+  :root {
+    --bg-page: #0a0d0a;
+    --bg-card: rgba(255, 255, 255, 0.06);
+    --bg-input: rgba(255, 255, 255, 0.05);
+    --border-color: rgba(255, 255, 255, 0.14);
+    --border-input: rgba(255, 255, 255, 0.18);
+    --text-main: #f5f3ea;
+    --text-muted: #9a9a8a;
+    --text-body: #d8d6c9;
+    --text-dim: #6f6f62;
+    --accent: #f0c419;
+    --accent-hover: #d6ac00;
+    --accent-text: #0b0f0a;
+    --green: #4ade80;
+    --green-bg: rgba(74, 222, 128, 0.15);
+    --red: #ef4444;
+    --red-bg: rgba(239, 68, 68, 0.15);
+    --blue: #38bdf8;
+    --blue-bg: rgba(56, 189, 248, 0.15);
+    --card-shadow: 0 10px 30px rgba(0, 0, 0, 0.5), inset 0 1px 0 rgba(255, 255, 255, 0.12);
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Inter', sans-serif; }
+  body {
+    background-color: var(--bg-page);
+    background-image: linear-gradient(rgba(6, 8, 6, 0.72), rgba(6, 8, 6, 0.72)), url("../images/hr-vision-bg.jpeg");
+    background-size: cover;
+    background-position: center;
+    background-repeat: no-repeat;
+    background-attachment: fixed;
+    color: var(--text-main);
+    min-height: 100vh;
+  }
+  .page-wrap { max-width: 1280px; margin: 0 auto; padding: 32px 24px 64px; }
+  .page-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 24px; }
+  .page-header h1 { font-size: 24px; font-weight: 700; }
+  .page-header p { color: var(--text-muted); font-size: 14px; margin-top: 4px; }
+  .badge-test {
+    font-size: 11px; font-weight: 700; letter-spacing: 0.04em; text-transform: uppercase;
+    background: var(--blue-bg); color: var(--blue); padding: 4px 10px; border-radius: 999px;
+  }
+
+  .layout { display: grid; grid-template-columns: 340px 1fr; gap: 24px; align-items: start; }
+  @media (max-width: 900px) { .layout { grid-template-columns: 1fr; } }
+
+  .card {
+    background: var(--bg-card);
+    border: 1px solid var(--border-color);
+    border-radius: 18px;
+    box-shadow: var(--card-shadow);
+    backdrop-filter: blur(20px) saturate(150%);
+    -webkit-backdrop-filter: blur(20px) saturate(150%);
+    padding: 22px;
+  }
+  .card h2 { font-size: 16px; font-weight: 700; margin-bottom: 4px; }
+  .card .card-sub { font-size: 12.5px; color: var(--text-muted); margin-bottom: 18px; }
+
+  .jd-panel { position: sticky; top: 24px; display: flex; flex-direction: column; gap: 16px; }
+
+  .form-group { margin-bottom: 16px; }
+  .form-group:last-child { margin-bottom: 0; }
+  .form-group label { display: block; font-size: 12.5px; font-weight: 600; color: var(--text-body); margin-bottom: 6px; }
+  .form-group input[type="text"], .form-group input[type="number"] {
+    width: 100%; padding: 10px 12px; border-radius: 8px; border: 1px solid var(--border-input);
+    background: var(--bg-input); color: var(--text-main); font-size: 13.5px; outline: none;
+  }
+  .form-group input:focus { border-color: var(--accent); }
+  .form-hint { font-size: 11.5px; color: var(--text-dim); margin-top: 5px; }
+
+  .weight-row { display: flex; gap: 10px; }
+  .weight-row .form-group { flex: 1; }
+
+  .analyze-btn {
+    width: 100%; padding: 13px; background: var(--accent); color: var(--accent-text);
+    border: none; border-radius: 10px; font-size: 14px; font-weight: 700; cursor: pointer;
+    display: flex; align-items: center; justify-content: center; gap: 8px;
+  }
+  .analyze-btn:hover { background: var(--accent-hover); }
+  .analyze-btn:disabled { background: var(--bg-input); color: var(--text-dim); cursor: not-allowed; }
+
+  .upload-zone {
+    border: 2px dashed var(--border-input); border-radius: 14px; padding: 36px 20px;
+    text-align: center; cursor: pointer; transition: border-color 0.2s, background 0.2s;
+  }
+  .upload-zone:hover, .upload-zone.dragover { border-color: var(--accent); background: rgba(240,196,25,0.06); }
+  .upload-zone i { width: 32px; height: 32px; color: var(--text-dim); margin-bottom: 10px; }
+  .upload-zone .u-title { font-size: 14px; font-weight: 600; margin-bottom: 4px; }
+  .upload-zone .u-sub { font-size: 12.5px; color: var(--text-muted); }
+
+  .file-list { display: flex; flex-direction: column; gap: 8px; margin-top: 14px; }
+  .file-row {
+    display: flex; align-items: center; gap: 10px; padding: 9px 12px;
+    background: var(--bg-input); border: 1px solid var(--border-color); border-radius: 8px; font-size: 13px;
+  }
+  .file-row .fr-name { flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .file-row .fr-status { font-size: 11.5px; color: var(--text-dim); }
+  .file-row .fr-remove { background: none; border: none; color: var(--text-dim); cursor: pointer; display: flex; }
+  .file-row .fr-remove:hover { color: var(--red); }
+  .file-row .fr-remove svg { width: 15px; height: 15px; }
+
+  .controls-row { display: flex; align-items: center; justify-content: space-between; gap: 16px; margin: 20px 0 4px; flex-wrap: wrap; }
+  .threshold-control { display: flex; align-items: center; gap: 10px; font-size: 13px; color: var(--text-body); }
+  .threshold-control input[type="range"] { width: 140px; accent-color: var(--accent); }
+  .threshold-control .th-val { font-weight: 700; color: var(--accent); min-width: 34px; }
+  .results-summary { font-size: 13px; color: var(--text-muted); }
+  .results-summary strong { color: var(--text-main); }
+
+  .toggle-all { display: flex; align-items: center; gap: 6px; font-size: 12.5px; color: var(--text-muted); cursor: pointer; }
+  .toggle-all input { accent-color: var(--accent); }
+
+  .results-list { display: flex; flex-direction: column; gap: 14px; margin-top: 16px; }
+
+  .empty-state { text-align: center; padding: 50px 20px; color: var(--text-dim); font-size: 13.5px; }
+  .empty-state i { width: 34px; height: 34px; margin-bottom: 10px; color: var(--text-dim); }
+
+  .candidate-card { padding: 18px 20px; }
+  .candidate-card.failed { opacity: 0.55; }
+  .cand-top { display: flex; align-items: flex-start; justify-content: space-between; gap: 14px; }
+  .cand-name-block { display: flex; align-items: center; gap: 10px; }
+  .cand-rank {
+    width: 26px; height: 26px; border-radius: 50%; background: var(--bg-input);
+    display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 700; color: var(--text-muted);
+    flex-shrink: 0;
+  }
+  .cand-name { font-size: 15px; font-weight: 700; }
+  .cand-meta { font-size: 12px; color: var(--text-muted); margin-top: 2px; }
+
+  .score-ring {
+    width: 56px; height: 56px; border-radius: 50%; flex-shrink: 0;
+    display: flex; align-items: center; justify-content: center; font-size: 14px; font-weight: 800;
+    position: relative;
+  }
+  .score-ring .score-bg { position: absolute; inset: 0; border-radius: 50%; }
+  .score-ring span { position: relative; z-index: 1; }
+
+  .cand-summary { font-size: 13px; color: var(--text-body); margin: 14px 0; line-height: 1.5; }
+
+  .skill-section { margin-top: 10px; }
+  .skill-section .ss-label { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.04em; color: var(--text-dim); margin-bottom: 6px; }
+  .skill-tags { display: flex; flex-wrap: wrap; gap: 6px; }
+  .skill-tag { font-size: 11.5px; font-weight: 600; padding: 4px 10px; border-radius: 999px; }
+  .skill-tag.matched { background: var(--green-bg); color: var(--green); }
+  .skill-tag.missing { background: var(--red-bg); color: var(--red); }
+  .skill-tag.nice { background: var(--blue-bg); color: var(--blue); }
+
+  .cand-footer { display: flex; align-items: center; justify-content: space-between; margin-top: 14px; }
+  .status-pill { font-size: 11.5px; font-weight: 700; padding: 4px 10px; border-radius: 999px; }
+  .status-pill.pass { background: var(--green-bg); color: var(--green); }
+  .status-pill.fail { background: var(--red-bg); color: var(--red); }
+
+  .view-text-btn {
+    background: none; border: none; color: var(--text-dim); font-size: 12px; cursor: pointer;
+    display: flex; align-items: center; gap: 4px;
+  }
+  .view-text-btn:hover { color: var(--accent); }
+  .view-text-btn svg { width: 13px; height: 13px; }
+  .extracted-text {
+    display: none; margin-top: 10px; padding: 10px 12px; background: var(--bg-input);
+    border: 1px solid var(--border-color); border-radius: 8px; font-size: 11.5px; color: var(--text-dim);
+    max-height: 160px; overflow-y: auto; white-space: pre-wrap; font-family: monospace;
+  }
+  .extracted-text.open { display: block; }
+
+  .spin { animation: spin 1s linear infinite; }
+  @keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+</style>
+</head>
+<body>
+
+<div class="page-wrap">
+  <div class="page-header">
+    <div>
+      <h1>CV Screening</h1>
+      <p>Define what the role needs, upload CVs, and only see candidates who actually match</p>
+    </div>
+    <span class="badge-test">Test Page</span>
+  </div>
+
+  <div class="layout">
+    <!-- Job Requirements Panel -->
+    <aside class="jd-panel">
+      <div class="card">
+        <h2>Job Requirements</h2>
+        <p class="card-sub">This defines what "passing" means for this batch of CVs.</p>
+
+        <div class="form-group">
+          <label>Job Title</label>
+          <input type="text" id="jd-title" placeholder="e.g. Senior Frontend Engineer">
+        </div>
+
+        <div class="form-group">
+          <label>Must-Have Skills</label>
+          <input type="text" id="jd-must" placeholder="e.g. React, JavaScript, REST API">
+          <p class="form-hint">Comma-separated. A CV must show most of these to pass.</p>
+        </div>
+
+        <div class="form-group">
+          <label>Nice-to-Have Skills</label>
+          <input type="text" id="jd-nice" placeholder="e.g. TypeScript, GraphQL, AWS">
+          <p class="form-hint">Comma-separated. Bonus points, not required.</p>
+        </div>
+
+        <div class="form-group">
+          <label>Minimum Years of Experience</label>
+          <input type="number" id="jd-years" min="0" placeholder="e.g. 3">
+        </div>
+      </div>
+
+      <div class="card">
+        <h2>Pass Threshold</h2>
+        <p class="card-sub">Only candidates at or above this score are shown as passing.</p>
+        <div class="threshold-control" style="width:100%; justify-content: space-between;">
+          <input type="range" id="threshold-slider" min="0" max="100" value="60">
+          <span class="th-val" id="threshold-val">60%</span>
+        </div>
+      </div>
+    </aside>
+
+    <!-- Upload + Results -->
+    <main>
+      <div class="card">
+        <h2>Upload CVs</h2>
+        <p class="card-sub">PDF resumes only. Text is extracted right here in your browser — nothing is uploaded anywhere.</p>
+
+        <div class="upload-zone" id="upload-zone">
+          <i data-lucide="upload-cloud"></i>
+          <div class="u-title">Click to upload, or drag and drop</div>
+          <div class="u-sub">You can select multiple PDF files at once</div>
+          <input type="file" id="file-input" accept=".pdf" multiple style="display:none;">
+        </div>
+
+        <div class="file-list" id="file-list"></div>
+
+        <button class="analyze-btn" id="analyze-btn" style="margin-top:18px;" disabled>
+          <i data-lucide="scan-search"></i> Analyze CVs Against Job Requirements
+        </button>
+      </div>
+
+      <div class="controls-row" id="results-controls" style="display:none;">
+        <div class="results-summary" id="results-summary"></div>
+        <label class="toggle-all">
+          <input type="checkbox" id="show-all-toggle"> Show candidates below threshold too
+        </label>
+      </div>
+
+      <div class="results-list" id="results-list">
+        <div class="card empty-state">
+          <i data-lucide="inbox"></i>
+          <div>Fill in the job requirements, upload some CVs, then click Analyze.</div>
+        </div>
+      </div>
+    </main>
+  </div>
+</div>
+
+<script>
+pdfjsLib.GlobalWorkerOptions.workerSrc = "https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js";
+
+// A small synonym map so "JS" matches "JavaScript", "SQL" matches "MySQL", etc.
+const SYNONYMS = {
+  "js": ["javascript"], "javascript": ["js"],
+  "ts": ["typescript"], "typescript": ["ts"],
+  "node": ["nodejs", "node.js"], "nodejs": ["node", "node.js"], "node.js": ["node", "nodejs"],
+  "react": ["reactjs", "react.js"], "reactjs": ["react"],
+  "vue": ["vuejs", "vue.js"],
+  "angular": ["angularjs"],
+  "sql": ["mysql", "postgresql", "postgres", "sqlite", "mssql"],
+  "mysql": ["sql"], "postgresql": ["sql", "postgres"], "postgres": ["sql", "postgresql"],
+  "html": ["html5"], "css": ["css3"],
+  "aws": ["amazon web services"],
+  "gcp": ["google cloud", "google cloud platform"],
+  "ml": ["machine learning"], "machine learning": ["ml"],
+  "ai": ["artificial intelligence"],
+  "ui": ["user interface"], "ux": ["user experience"],
+  "php": ["laravel", "symfony"],
+  "c#": ["csharp", ".net", "dotnet"],
+  "python": ["django", "flask"]
+};
+
+let uploadedFiles = []; // { file, id }
+let candidates = [];    // populated after analysis
+let fileIdCounter = 0;
+
+const uploadZone = document.getElementById("upload-zone");
+const fileInput = document.getElementById("file-input");
+const fileListEl = document.getElementById("file-list");
+const analyzeBtn = document.getElementById("analyze-btn");
+const thresholdSlider = document.getElementById("threshold-slider");
+const thresholdVal = document.getElementById("threshold-val");
+const showAllToggle = document.getElementById("show-all-toggle");
+
+uploadZone.addEventListener("click", () => fileInput.click());
+uploadZone.addEventListener("dragover", (e) => { e.preventDefault(); uploadZone.classList.add("dragover"); });
+uploadZone.addEventListener("dragleave", () => uploadZone.classList.remove("dragover"));
+uploadZone.addEventListener("drop", (e) => {
+  e.preventDefault();
+  uploadZone.classList.remove("dragover");
+  addFiles(e.dataTransfer.files);
+});
+fileInput.addEventListener("change", (e) => addFiles(e.target.files));
+
+function addFiles(fileListArg) {
+  Array.from(fileListArg).forEach(file => {
+    if (file.type !== "application/pdf") return;
+    uploadedFiles.push({ file, id: ++fileIdCounter });
+  });
+  renderFileList();
+}
+
+function removeFile(id) {
+  uploadedFiles = uploadedFiles.filter(f => f.id !== id);
+  renderFileList();
+}
+
+function renderFileList() {
+  fileListEl.innerHTML = uploadedFiles.map(f => `
+    <div class="file-row">
+      <i data-lucide="file-text" style="width:15px;height:15px;color:var(--text-dim);"></i>
+      <span class="fr-name">${f.file.name}</span>
+      <span class="fr-status">${(f.file.size / 1024).toFixed(0)} KB</span>
+      <button class="fr-remove" onclick="removeFile(${f.id})"><i data-lucide="x"></i></button>
+    </div>
+  `).join("");
+  analyzeBtn.disabled = uploadedFiles.length === 0;
+  lucide.createIcons();
+}
+
+thresholdSlider.addEventListener("input", () => {
+  thresholdVal.textContent = thresholdSlider.value + "%";
+  if (candidates.length > 0) renderResults();
+});
+showAllToggle.addEventListener("change", renderResults);
+
+function parseSkillList(raw) {
+  return raw.split(",").map(s => s.trim()).filter(Boolean);
+}
+
+function textContainsSkill(text, skill) {
+  const candidates = [skill, ...(SYNONYMS[skill.toLowerCase()] || [])];
+  return candidates.some(term => {
+    const escaped = term.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+    const pattern = /^[a-z0-9#.]+$/i.test(term)
+      ? new RegExp(`(?:^|[^a-z0-9])${escaped}(?:$|[^a-z0-9])`, "i")
+      : new RegExp(escaped, "i");
+    return pattern.test(text);
+  });
+}
+
+function detectYearsOfExperience(text) {
+  const nearWord = text.match(/(\d+)\+?\s*(?:years?|yrs?)(?:\s+of)?\s+experience/i);
+  if (nearWord) return parseInt(nearWord[1], 10);
+  const bare = text.match(/(\d+)\+?\s*(?:years?|yrs?)\b/i);
+  if (bare) return parseInt(bare[1], 10);
+  return 0;
+}
+
+function guessCandidateName(filename) {
+  return filename.replace(/\.pdf$/i, "").replace(/[_-]+/g, " ").trim();
+}
+
+async function extractPdfText(file) {
+  const buffer = await file.arrayBuffer();
+  const pdf = await pdfjsLib.getDocument({ data: buffer }).promise;
+  let fullText = "";
+  for (let i = 1; i <= pdf.numPages; i++) {
+    const page = await pdf.getPage(i);
+    const content = await page.getTextContent();
+    fullText += content.items.map(item => item.str).join(" ") + "\n";
+  }
+  return fullText;
+}
+
+function scoreCandidate(text, mustSkills, niceSkills, minYears) {
+  const mustMatches = mustSkills.filter(s => textContainsSkill(text, s));
+  const missingMust = mustSkills.filter(s => !mustMatches.includes(s));
+  const niceMatches = niceSkills.filter(s => textContainsSkill(text, s));
+  const years = detectYearsOfExperience(text);
+
+  const mustScore = mustSkills.length ? mustMatches.length / mustSkills.length : 1;
+  const niceScore = niceSkills.length ? niceMatches.length / niceSkills.length : 1;
+  const expScore = minYears > 0 ? Math.min(years / minYears, 1) : 1;
+
+  let overall = (mustScore * 0.65) + (niceScore * 0.20) + (expScore * 0.15);
+
+  // A "must-have" list means nothing if the CV matches none of it at all.
+  const hardFail = mustSkills.length > 0 && mustMatches.length === 0;
+  if (hardFail) overall = Math.min(overall, 0.3);
+
+  const percentage = Math.round(overall * 100);
+
+  const summaryParts = [];
+  summaryParts.push(mustMatches.length > 0
+    ? `Matches ${mustMatches.length}/${mustSkills.length} must-have skill${mustSkills.length === 1 ? '' : 's'} (${mustMatches.join(", ")}).`
+    : (mustSkills.length > 0 ? "Does not clearly demonstrate any of the required must-have skills." : "No must-have skills were specified."));
+  summaryParts.push(missingMust.length > 0
+    ? `Missing: ${missingMust.join(", ")}.`
+    : "No major skill gaps against the listed requirements.");
+  if (minYears > 0) {
+    summaryParts.push(years >= minYears
+      ? `Detected ~${years} years of experience, meeting the ${minYears}-year requirement.`
+      : `Detected ~${years} years of experience, below the ${minYears}-year requirement.`);
+  } else if (years > 0) {
+    summaryParts.push(`Detected ~${years} years of experience.`);
+  }
+
+  return {
+    percentage, mustMatches, missingMust, niceMatches, years,
+    summary: summaryParts.join(" "),
+    text
+  };
+}
+
+document.getElementById("analyze-btn").addEventListener("click", async () => {
+  const mustSkills = parseSkillList(document.getElementById("jd-must").value);
+  const niceSkills = parseSkillList(document.getElementById("jd-nice").value);
+  const minYears = parseInt(document.getElementById("jd-years").value, 10) || 0;
+
+  if (mustSkills.length === 0 && niceSkills.length === 0) {
+    alert("Add at least one must-have or nice-to-have skill first.");
+    return;
+  }
+
+  analyzeBtn.disabled = true;
+  analyzeBtn.innerHTML = `<i data-lucide="loader-2" class="spin"></i> Reading CVs...`;
+  lucide.createIcons();
+
+  candidates = [];
+  for (const f of uploadedFiles) {
+    try {
+      const text = await extractPdfText(f.file);
+      const result = scoreCandidate(text, mustSkills, niceSkills, minYears);
+      candidates.push({ name: guessCandidateName(f.file.name), ...result });
+    } catch (err) {
+      console.error("Failed to read " + f.file.name, err);
+      candidates.push({
+        name: guessCandidateName(f.file.name), percentage: 0,
+        mustMatches: [], missingMust: mustSkills, niceMatches: [], years: 0,
+        summary: "Could not read this PDF (it may be scanned/image-based rather than text).",
+        text: "", unreadable: true
+      });
+    }
+  }
+
+  candidates.sort((a, b) => b.percentage - a.percentage);
+
+  analyzeBtn.disabled = false;
+  analyzeBtn.innerHTML = `<i data-lucide="scan-search"></i> Re-Analyze CVs`;
+  document.getElementById("results-controls").style.display = "flex";
+  renderResults();
+});
+
+function scoreColor(pct) {
+  if (pct >= 75) return "var(--green)";
+  if (pct >= 50) return "var(--accent)";
+  return "var(--red)";
+}
+
+function renderResults() {
+  const threshold = parseInt(thresholdSlider.value, 10);
+  const showAll = showAllToggle.checked;
+  const passed = candidates.filter(c => c.percentage >= threshold);
+  const visible = showAll ? candidates : passed;
+
+  document.getElementById("results-summary").innerHTML =
+    `<strong>${passed.length}</strong> of <strong>${candidates.length}</strong> candidates pass at ${threshold}%+`;
+
+  const listEl = document.getElementById("results-list");
+
+  if (visible.length === 0) {
+    listEl.innerHTML = `
+      <div class="card empty-state">
+        <i data-lucide="user-x"></i>
+        <div>No candidates meet this threshold yet. Try lowering it, or check "show below threshold".</div>
+      </div>`;
+    lucide.createIcons();
+    return;
+  }
+
+  listEl.innerHTML = visible.map((c, i) => {
+    const passes = c.percentage >= threshold;
+    const color = scoreColor(c.percentage);
+    return `
+      <div class="card candidate-card ${passes ? '' : 'failed'}">
+        <div class="cand-top">
+          <div class="cand-name-block">
+            <div class="cand-rank">${i + 1}</div>
+            <div>
+              <div class="cand-name">${c.name}</div>
+              <div class="cand-meta">${c.years > 0 ? `~${c.years} yrs experience` : 'Experience not detected'}</div>
+            </div>
+          </div>
+          <div class="score-ring">
+            <div class="score-bg" style="background: conic-gradient(${color} ${c.percentage * 3.6}deg, var(--bg-input) 0deg);"></div>
+            <div style="position:absolute; inset:4px; background:var(--bg-page); border-radius:50%;"></div>
+            <span style="color:${color};">${c.percentage}%</span>
+          </div>
+        </div>
+
+        <p class="cand-summary">${c.summary}</p>
+
+        ${c.mustMatches.length > 0 || c.missingMust.length > 0 ? `
+          <div class="skill-section">
+            <div class="ss-label">Must-Have Skills</div>
+            <div class="skill-tags">
+              ${c.mustMatches.map(s => `<span class="skill-tag matched">✓ ${s}</span>`).join("")}
+              ${c.missingMust.map(s => `<span class="skill-tag missing">✕ ${s}</span>`).join("")}
+            </div>
+          </div>` : ""}
+
+        ${c.niceMatches.length > 0 ? `
+          <div class="skill-section">
+            <div class="ss-label">Nice-to-Have Matched</div>
+            <div class="skill-tags">
+              ${c.niceMatches.map(s => `<span class="skill-tag nice">${s}</span>`).join("")}
+            </div>
+          </div>` : ""}
+
+        <div class="cand-footer">
+          <span class="status-pill ${passes ? 'pass' : 'fail'}">${passes ? 'Passes threshold' : 'Below threshold'}</span>
+          ${!c.unreadable ? `
+            <button class="view-text-btn" onclick="toggleExtractedText(${i})">
+              <i data-lucide="file-search"></i> View extracted text
+            </button>` : ''}
+        </div>
+        <div class="extracted-text" id="extracted-${i}">${(c.text || "").slice(0, 3000).replace(/</g, "&lt;")}</div>
+      </div>
+    `;
+  }).join("");
+
+  lucide.createIcons();
+}
+
+function toggleExtractedText(index) {
+  document.getElementById("extracted-" + index).classList.toggle("open");
+}
+
+lucide.createIcons();
+</script>
+
+</body>
+</html>

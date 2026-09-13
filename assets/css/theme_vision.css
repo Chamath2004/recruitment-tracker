@@ -145,8 +145,13 @@ html:not([data-theme="light"]) .continue-btn,
 html:not([data-theme="light"]) .step-item.completed .step-number,
 html:not([data-theme="light"]) .submit-btn,
 html:not([data-theme="light"]) .interview-join-btn,
-html:not([data-theme="light"]) .profile-edit-btn.saving {
+html:not([data-theme="light"]) .profile-edit-btn.saving,
+html:not([data-theme="light"]) .cvs-run-btn {
   color: #0b0f0a;
+}
+
+html:not([data-theme="light"]) .cvs-run-btn:disabled {
+  color: var(--text-dim);
 }
 
 html:not([data-theme="light"]) .new-vacancy-btn,
