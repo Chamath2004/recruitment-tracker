@@ -19,7 +19,7 @@ function loadHrProfile() {
     .then(response => response.json())
     .then(result => {
       if (!result.success) {
-        window.location.href = 'HR_login.html';
+        window.location.href = 'Login.html';
         return;
       }
       const a = result.data;
@@ -1032,6 +1032,11 @@ function updateMeetingLinkControls() {
   const isOnsite = modeEl.value === 'onsite';
   generateBtn.style.display = isOnsite ? 'none' : '';
   linkEl.placeholder = isOnsite ? 'Enter an office address or meeting location' : 'Enter a location, or generate a Google Meet link';
+
+  if (isOnsite && /^https?:\/\/meet\.google\.com/i.test(linkEl.value)) {
+    linkEl.value = '';
+    linkEl.dataset.auto = 'true';
+  }
 }
 
 function autoFillMeetingLink(force) {

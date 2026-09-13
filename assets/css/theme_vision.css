@@ -1,0 +1,164 @@
+/* Altrium "Vision" dark/gold theme — applied site-wide.
+   Loads after Candidate.css + portal CSS on every dashboard page and overrides
+   the shared CSS variables + a handful of hardcoded colors. Guarded with
+   :not([data-theme="light"]) everywhere so the existing light-mode toggle
+   keeps working unchanged. */
+
+:root:not([data-theme="light"]) {
+  --bg-sidebar: #0a0d0a;
+  --bg-sidebar-hover: rgba(240, 196, 25, 0.08);
+  --bg-sidebar-active: rgba(240, 196, 25, 0.14);
+  --bg-main: #0a0d0a;
+  --bg-card: rgba(255, 255, 255, 0.06);
+  --bg-input: rgba(255, 255, 255, 0.05);
+  --bg-overlay-soft: rgba(240, 196, 25, 0.04);
+
+  --text-main: #f5f3ea;
+  --text-muted: #9a9a8a;
+  --text-body: #d8d6c9;
+  --text-dim: #6f6f62;
+  --text-sidebar: #8d8d7d;
+  --text-sidebar-light: #f5f3ea;
+
+  --border-color: rgba(255, 255, 255, 0.14);
+  --border-dashed: rgba(255, 255, 255, 0.15);
+  --hover-border-card: rgba(240, 196, 25, 0.35);
+  --hover-bg-card: rgba(255, 255, 255, 0.09);
+
+  --primary-green: #f0c419;
+  --primary-green-hover: #d6ac00;
+  --badge-green-bg: rgba(74, 222, 128, 0.15);
+  --badge-green-text: #4ade80;
+  --badge-blue-bg: rgba(56, 189, 248, 0.15);
+  --badge-blue-text: #38bdf8;
+  --badge-gray-bg: rgba(255, 255, 255, 0.08);
+  --badge-gray-text: #d4d4d0;
+  --badge-red: #ef4444;
+
+  --purple-tint-bg: rgba(192, 132, 252, 0.15);
+  --purple-tint-text: #c084fc;
+  --purple-tint-bg-strong: rgba(192, 132, 252, 0.3);
+
+  --warning-bg: rgba(245, 158, 11, 0.15);
+  --warning-text: #fbbf24;
+
+  --avatar-grad-1: rgba(240, 196, 25, 0.35);
+  --avatar-grad-2: rgba(240, 196, 25, 0.12);
+  --avatar-text: #f0c419;
+
+  --card-shadow: 0 10px 30px rgba(0, 0, 0, 0.5), inset 0 1px 0 rgba(255, 255, 255, 0.12);
+}
+
+/* Background image with a dark scrim so text/cards stay readable over it */
+html:not([data-theme="light"]) body {
+  background-image:
+    linear-gradient(rgba(6, 8, 6, 0.5), rgba(6, 8, 6, 0.5)),
+    url("../../images/hr-vision-bg.jpeg");
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+  background-attachment: fixed;
+}
+
+/* Sidebar blends into the ambient background instead of sitting as a flat block */
+html:not([data-theme="light"]) .sidebar {
+  background-color: rgba(10, 13, 10, 0.55);
+  border-right: 1px solid rgba(240, 196, 25, 0.08);
+  backdrop-filter: blur(14px) saturate(150%);
+  -webkit-backdrop-filter: blur(14px) saturate(150%);
+}
+
+/* Active nav item is hardcoded to a blue highlight in Candidate.css — recolor to gold */
+html:not([data-theme="light"]) .nav-item.active {
+  background: rgba(240, 196, 25, 0.14);
+  border: 1px solid rgba(240, 196, 25, 0.35);
+  box-shadow: 0 0 18px rgba(240, 196, 25, 0.18);
+  color: var(--text-sidebar-light);
+}
+
+/* Light glass effect: translucent cards over the ambient background, with blur + a soft top highlight */
+html:not([data-theme="light"]) .panel-card,
+html:not([data-theme="light"]) .metric-card,
+html:not([data-theme="light"]) .vacancy-card,
+html:not([data-theme="light"]) .workflow-vacancy-item,
+html:not([data-theme="light"]) .settings-card,
+html:not([data-theme="light"]) .google-status-bar,
+html:not([data-theme="light"]) .feedback-alert-banner,
+html:not([data-theme="light"]) .mi-card,
+html:not([data-theme="light"]) .ac-positions-card,
+html:not([data-theme="light"]) .ac-card,
+html:not([data-theme="light"]) .fb-page-card,
+html:not([data-theme="light"]) .kanban-card,
+html:not([data-theme="light"]) .hm-card,
+html:not([data-theme="light"]) .hm-empty-state,
+html:not([data-theme="light"]) .job-card,
+html:not([data-theme="light"]) .form-card,
+html:not([data-theme="light"]) .application-card,
+html:not([data-theme="light"]) .notif-card,
+html:not([data-theme="light"]) .profile-card,
+html:not([data-theme="light"]) .job-detail-panel {
+  border-radius: 18px;
+  box-shadow: var(--card-shadow);
+  backdrop-filter: blur(20px) saturate(150%);
+  -webkit-backdrop-filter: blur(20px) saturate(150%);
+}
+
+/* Popups: same frosted-glass language as the cards, but with a heavier, darker blur behind them
+   so the busy background image gets smoothed into a flat tone instead of showing through and
+   clashing with the modal text. */
+html:not([data-theme="light"]) .modal-overlay {
+  background-color: rgba(0, 0, 0, 0.55);
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+}
+
+html:not([data-theme="light"]) .modal-dialog {
+  background-color: rgba(20, 24, 15, 0.62);
+  border-radius: 18px;
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.6), inset 0 1px 0 rgba(255, 255, 255, 0.12);
+  backdrop-filter: blur(28px) saturate(150%);
+  -webkit-backdrop-filter: blur(28px) saturate(150%);
+}
+
+html:not([data-theme="light"]) .modal-body input,
+html:not([data-theme="light"]) .modal-body select,
+html:not([data-theme="light"]) .modal-body textarea {
+  background-color: rgba(255, 255, 255, 0.08);
+  border-color: rgba(255, 255, 255, 0.18);
+}
+
+/* Buttons/pills/badges were hardcoded to white text for a blue background —
+   force dark text so they stay legible on the new gold background */
+html:not([data-theme="light"]) .new-vacancy-btn,
+html:not([data-theme="light"]) .modal-save-btn,
+html:not([data-theme="light"]) .feedback-add-btn,
+html:not([data-theme="light"]) .google-connect-btn,
+html:not([data-theme="light"]) .stage-add-btn,
+html:not([data-theme="light"]) .time-ok-btn,
+html:not([data-theme="light"]) .filter-pill.active,
+html:not([data-theme="light"]) .candidate-action-btn.shortlist:hover,
+html:not([data-theme="light"]) .avatar,
+html:not([data-theme="light"]) .filter-count-badge,
+html:not([data-theme="light"]) .apply-btn,
+html:not([data-theme="light"]) .continue-btn,
+html:not([data-theme="light"]) .step-item.completed .step-number,
+html:not([data-theme="light"]) .submit-btn,
+html:not([data-theme="light"]) .interview-join-btn,
+html:not([data-theme="light"]) .profile-edit-btn.saving {
+  color: #0b0f0a;
+}
+
+html:not([data-theme="light"]) .new-vacancy-btn,
+html:not([data-theme="light"]) .modal-save-btn,
+html:not([data-theme="light"]) .stage-add-btn,
+html:not([data-theme="light"]) .filter-pill.active {
+  border-radius: 999px;
+  font-weight: 600;
+}
+
+/* .apply-btn:disabled isn't gold-backed like the rest — keep it on the muted
+   gray badge colors instead of the forced dark text above */
+html:not([data-theme="light"]) .apply-btn:disabled {
+  color: var(--badge-gray-text);
+}

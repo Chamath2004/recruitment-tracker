@@ -169,6 +169,7 @@ function renderJobs() {
         <span class="job-category">${job.category}</span>
         <div class="job-meta">
           <span><i data-lucide="clock"></i> ${job.type}</span>
+          ${job.alreadyApplied ? '<span class="pill-tag gray">Already applied</span>' : ''}
         </div>
       </div>
       <i data-lucide="chevron-right" class="arrow-icon"></i>
@@ -223,7 +224,9 @@ function selectJob(id) {
       </div>
     </div>
 
-    <button class="apply-btn" onclick="openApplication(${job.id})">Apply Now</button>
+    ${job.alreadyApplied
+      ? `<button class="apply-btn applied" disabled><i data-lucide="check-circle"></i> Already Applied</button>`
+      : `<button class="apply-btn" onclick="openApplication(${job.id})">Apply Now</button>`}
   `;
 
   jobDetailPanel.classList.add("active");
@@ -239,15 +242,20 @@ function closeJobDetail() {
 }
 
 // Open Application View
-function openApplication(jobId) {
+async function openApplication(jobId) {
   activeJob = jobsData.find(j => j.id === jobId);
   currentStep = 1;
+
+  // Wait for the candidate's saved profile so the form starts pre-filled
+  // instead of asking them to retype their own details on every application.
+  await sessionProfilePromise;
+
   formData = {
-    fullName: "",
-    email: "",
-    phone: "",
-    linkedin: "",
-    resumeName: "",
+    fullName: profileData.fullName || "",
+    email: profileData.email || "",
+    phone: profileData.phone || "",
+    linkedin: profileData.linkedin || "",
+    resumeName: profileData.resumeFile || "",
     resumeFile: null,
     coverLetter: ""
   };
@@ -335,12 +343,12 @@ function renderApplicationStep() {
       <div class="form-card">
         <h3>Resume / CV Upload *</h3>
         <div class="upload-box" onclick="document.getElementById('resume-file-input').click()">
-          <i data-lucide="upload" class="upload-icon"></i>
+          <i data-lucide="${formData.resumeName && !formData.resumeFile ? 'file-check' : 'upload'}" class="upload-icon"></i>
           <div class="upload-title" id="upload-title">${formData.resumeName || "Click to upload your resume"}</div>
-          <div class="upload-subtitle">PDF, DOC, or DOCX (max 5MB)</div>
+          <div class="upload-subtitle">${formData.resumeName && !formData.resumeFile ? "Using the resume from your profile — click to use a different file" : "PDF, DOC, or DOCX (max 5MB)"}</div>
           <input type="file" id="resume-file-input" style="display:none;" accept=".pdf,.doc,.docx" onchange="handleFileUpload(event)">
         </div>
-        <p class="upload-note">Your resume will be automatically logged into our tracking system.</p>
+        <p class="upload-note">${formData.resumeName && !formData.resumeFile ? "You can keep this resume or upload a new one just for this application." : "Your resume will be automatically logged into our tracking system."}</p>
       </div>
 
       <div class="form-actions">
@@ -495,7 +503,7 @@ function saveStep1AndNext() {
 }
 
 function saveStep2AndNext() {
-  if (!formData.resumeFile) {
+  if (!formData.resumeFile && !formData.resumeName) {
     alert("Please upload your resume/CV before continuing.");
     return;
   }
@@ -649,7 +657,7 @@ function loadSessionProfile() {
     .then(response => response.json())
     .then(result => {
       if (!result.success) {
-        window.location.href = 'Candidate_login.html';
+        window.location.href = 'Login.html';
         return;
       }
 
@@ -659,7 +667,12 @@ function loadSessionProfile() {
       profileData.phone = c.phone || "";
       profileData.location = c.location || "";
       profileData.linkedin = c.linkedin_url || "";
+      profileData.portfolio = c.portfolio_url || "";
       profileData.headline = c.professional_headline || "";
+      profileData.summary = c.summary || "";
+      profileData.skills = c.skills || [];
+      profileData.experience = c.experience || [];
+      profileData.education = c.education || [];
       profileData.resumeFile = c.resume_name || "";
       profileLoaded = true;
 
@@ -888,31 +901,51 @@ function renderProfileView() {
           <div class="profile-card">
             <h3>Experience</h3>
             <div class="profile-list">
-              ${p.experience.length > 0 ? p.experience.map(exp => `
+              ${p.experience.length > 0 ? p.experience.map((exp, i) => `
                 <div class="profile-list-item">
                   <div class="profile-list-icon"><i data-lucide="briefcase"></i></div>
-                  <div>
-                    <p class="profile-list-title">${exp.role}</p>
-                    <p class="profile-list-subtitle">${exp.company} • ${exp.duration}</p>
-                  </div>
+                  ${isEditingProfile ? `
+                    <div class="profile-entry-edit">
+                      <input type="text" class="profile-input" placeholder="Role / Title" value="${exp.role || ''}" oninput="updateExperienceField(${i}, 'role', this.value)">
+                      <input type="text" class="profile-input" placeholder="Company" value="${exp.company || ''}" oninput="updateExperienceField(${i}, 'company', this.value)">
+                      <input type="text" class="profile-input" placeholder="Duration (e.g. 2021 - 2023)" value="${exp.duration || ''}" oninput="updateExperienceField(${i}, 'duration', this.value)">
+                    </div>
+                    <button class="profile-entry-remove" onclick="removeExperience(${i})"><i data-lucide="x"></i></button>
+                  ` : `
+                    <div>
+                      <p class="profile-list-title">${exp.role}</p>
+                      <p class="profile-list-subtitle">${exp.company} • ${exp.duration}</p>
+                    </div>
+                  `}
                 </div>
-              `).join('') : `<p class="profile-empty">No experience added yet.</p>`}
+              `).join('') : (isEditingProfile ? '' : `<p class="profile-empty">No experience added yet.</p>`)}
             </div>
+            ${isEditingProfile ? `<button class="profile-add-entry-btn" onclick="addExperience()"><i data-lucide="plus"></i> Add Experience</button>` : ''}
           </div>
 
           <div class="profile-card">
             <h3>Education</h3>
             <div class="profile-list">
-              ${p.education.length > 0 ? p.education.map(edu => `
+              ${p.education.length > 0 ? p.education.map((edu, i) => `
                 <div class="profile-list-item">
                   <div class="profile-list-icon"><i data-lucide="graduation-cap"></i></div>
-                  <div>
-                    <p class="profile-list-title">${edu.degree}</p>
-                    <p class="profile-list-subtitle">${edu.school} • ${edu.year}</p>
-                  </div>
+                  ${isEditingProfile ? `
+                    <div class="profile-entry-edit">
+                      <input type="text" class="profile-input" placeholder="Degree" value="${edu.degree || ''}" oninput="updateEducationField(${i}, 'degree', this.value)">
+                      <input type="text" class="profile-input" placeholder="School" value="${edu.school || ''}" oninput="updateEducationField(${i}, 'school', this.value)">
+                      <input type="text" class="profile-input" placeholder="Year (e.g. 2020)" value="${edu.year || ''}" oninput="updateEducationField(${i}, 'year', this.value)">
+                    </div>
+                    <button class="profile-entry-remove" onclick="removeEducation(${i})"><i data-lucide="x"></i></button>
+                  ` : `
+                    <div>
+                      <p class="profile-list-title">${edu.degree}</p>
+                      <p class="profile-list-subtitle">${edu.school} • ${edu.year}</p>
+                    </div>
+                  `}
                 </div>
-              `).join('') : `<p class="profile-empty">No education added yet.</p>`}
+              `).join('') : (isEditingProfile ? '' : `<p class="profile-empty">No education added yet.</p>`)}
             </div>
+            ${isEditingProfile ? `<button class="profile-add-entry-btn" onclick="addEducation()"><i data-lucide="plus"></i> Add Education</button>` : ''}
           </div>
         </div>
 
@@ -974,7 +1007,75 @@ function renderProfileView() {
 }
 
 function toggleProfileEdit() {
-  isEditingProfile = !isEditingProfile;
+  if (isEditingProfile) {
+    saveProfileChanges();
+    return;
+  }
+  isEditingProfile = true;
+  renderProfileView();
+}
+
+function saveProfileChanges() {
+  const p = profileData;
+
+  fetch('../api/update_profile.php', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      fullName: p.fullName,
+      phone: p.phone,
+      location: p.location,
+      linkedin: p.linkedin,
+      portfolio: p.portfolio,
+      headline: p.headline,
+      summary: p.summary,
+      skills: p.skills,
+      experience: p.experience,
+      education: p.education
+    })
+  })
+    .then(response => response.json())
+    .then(result => {
+      if (!result.success) {
+        alert(result.message || 'Failed to save profile.');
+        return;
+      }
+      isEditingProfile = false;
+      document.getElementById('sidebar-name').textContent = p.fullName;
+      document.getElementById('sidebar-avatar').textContent = getInitials(p.fullName) || '?';
+      renderProfileView();
+    })
+    .catch(error => {
+      console.error('Error saving profile:', error);
+      alert('An error occurred while saving your profile.');
+    });
+}
+
+function addExperience() {
+  profileData.experience.push({ role: '', company: '', duration: '' });
+  renderProfileView();
+}
+
+function updateExperienceField(index, field, value) {
+  profileData.experience[index][field] = value;
+}
+
+function removeExperience(index) {
+  profileData.experience.splice(index, 1);
+  renderProfileView();
+}
+
+function addEducation() {
+  profileData.education.push({ degree: '', school: '', year: '' });
+  renderProfileView();
+}
+
+function updateEducationField(index, field, value) {
+  profileData.education[index][field] = value;
+}
+
+function removeEducation(index) {
+  profileData.education.splice(index, 1);
   renderProfileView();
 }
 

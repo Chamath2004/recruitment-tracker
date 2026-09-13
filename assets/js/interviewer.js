@@ -35,7 +35,7 @@ function loadInterviewerProfile() {
     .then(response => response.json())
     .then(result => {
       if (!result.success) {
-        window.location.href = 'Interviewer_login.html';
+        window.location.href = 'Login.html';
         return;
       }
       const a = result.data;

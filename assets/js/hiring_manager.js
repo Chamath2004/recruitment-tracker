@@ -80,7 +80,7 @@ function loadHiringManagerProfile() {
     .then(response => response.json())
     .then(result => {
       if (!result.success) {
-        window.location.href = 'HiringManager_login.html';
+        window.location.href = 'Login.html';
         return;
       }
       const a = result.data;

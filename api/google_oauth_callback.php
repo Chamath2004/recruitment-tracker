@@ -3,7 +3,7 @@ session_start();
 require_once __DIR__ . "/google_calendar.php";
 
 if (empty($_SESSION['hr_admin_id'])) {
-    header("Location: ../pages/HR_login.html");
+    header("Location: ../pages/Login.html");
     exit();
 }
 

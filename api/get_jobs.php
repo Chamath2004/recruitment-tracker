@@ -1,4 +1,5 @@
 <?php
+session_start();
 header("Access-Control-Allow-Origin: *");
 header("Content-Type: application/json; charset=UTF-8");
 
@@ -15,6 +16,18 @@ if ($result) {
     while ($row = $result->fetch_assoc()) {
         $perJob[$row['job_title']] = (int) $row['cnt'];
     }
+}
+
+$myApplied = [];
+if (!empty($_SESSION['candidate_id'])) {
+    $stmt = $conn->prepare("SELECT DISTINCT job_title FROM applications WHERE candidate_id = ?");
+    $stmt->bind_param("i", $_SESSION['candidate_id']);
+    $stmt->execute();
+    $appliedResult = $stmt->get_result();
+    while ($row = $appliedResult->fetch_assoc()) {
+        $myApplied[$row['job_title']] = true;
+    }
+    $stmt->close();
 }
 
 $jobs = [];
@@ -38,6 +51,7 @@ if ($result) {
             "salary" => $row['salary'],
             "type" => $row['type'],
             "applicants" => ($perJob[$row['title']] ?? 0) . " applicants",
+            "alreadyApplied" => isset($myApplied[$row['title']]),
             "description" => $row['description'],
             "requirements" => array_values($requirements),
             "hiringProcess" => $hiringProcess

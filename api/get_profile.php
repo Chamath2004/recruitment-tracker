@@ -17,13 +17,16 @@ if ($conn->connect_error) {
 
 $candidateId = (int) $_SESSION['candidate_id'];
 
-$stmt = $conn->prepare("SELECT id, first_name, last_name, email, phone, location, linkedin_url, professional_headline, resume_name FROM candidates WHERE id = ?");
+$stmt = $conn->prepare("SELECT id, first_name, last_name, email, phone, location, linkedin_url, portfolio_url, professional_headline, summary, skills, experience, education, resume_name FROM candidates WHERE id = ?");
 $stmt->bind_param("i", $candidateId);
 $stmt->execute();
 $result = $stmt->get_result();
 
 if ($result->num_rows > 0) {
     $candidate = $result->fetch_assoc();
+    $candidate['skills'] = json_decode($candidate['skills'] ?? '', true) ?: [];
+    $candidate['experience'] = json_decode($candidate['experience'] ?? '', true) ?: [];
+    $candidate['education'] = json_decode($candidate['education'] ?? '', true) ?: [];
     echo json_encode(["success" => true, "data" => $candidate]);
 } else {
     echo json_encode(["success" => false, "message" => "Candidate not found"]);

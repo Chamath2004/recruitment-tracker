@@ -59,6 +59,28 @@ if (isset($_FILES['resume']) && $_FILES['resume']['error'] === UPLOAD_ERR_OK) {
     $resumePath = $storedName;
 }
 
+if ($resumeName === null) {
+    // No fresh file was attached to this application — reuse the candidate's
+    // saved profile resume so they don't have to re-upload it every time.
+    $stmt = $conn->prepare("SELECT resume_name, resume_path FROM candidates WHERE id = ?");
+    $stmt->bind_param("i", $candidateId);
+    $stmt->execute();
+    $profileResume = $stmt->get_result()->fetch_assoc();
+    $stmt->close();
+
+    if (!empty($profileResume['resume_path'])) {
+        $uploadDir = __DIR__ . '/../uploads/resumes/';
+        $sourceFile = $uploadDir . basename($profileResume['resume_path']);
+        $ext = strtolower(pathinfo($profileResume['resume_path'], PATHINFO_EXTENSION));
+        $storedName = 'resume_' . $candidateId . '_' . uniqid() . '.' . $ext;
+
+        if (file_exists($sourceFile) && copy($sourceFile, $uploadDir . $storedName)) {
+            $resumeName = $profileResume['resume_name'];
+            $resumePath = $storedName;
+        }
+    }
+}
+
 $stmt = $conn->prepare("INSERT INTO applications (candidate_id, job_title, full_name, email, phone, linkedin, resume_name, resume_path, cover_letter)
         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)");
 $stmt->bind_param("issssssss", $candidateId, $jobTitle, $fullName, $email, $phone, $linkedin, $resumeName, $resumePath, $coverLetter);
