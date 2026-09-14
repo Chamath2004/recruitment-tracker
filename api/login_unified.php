@@ -26,6 +26,7 @@ $roleTables = [
     'hr' => ['table' => 'hr_admins', 'session_key' => 'hr_admin_id', 'redirect' => 'HR.html'],
     'interviewer' => ['table' => 'interviewers', 'session_key' => 'interviewer_id', 'redirect' => 'Interviewer.html'],
     'hiring_manager' => ['table' => 'hiring_managers', 'session_key' => 'hiring_manager_id', 'redirect' => 'HiringManager.html'],
+    'senior_manager' => ['table' => 'senior_managers', 'session_key' => 'senior_manager_id', 'redirect' => 'SeniorManager.html'],
 ];
 
 foreach ($roleTables as $role => $config) {

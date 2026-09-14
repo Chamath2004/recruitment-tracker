@@ -1,0 +1,228 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Altrium - Senior Manager Dashboard</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <script src="https://unpkg.com/lucide@latest"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+  <script>
+    document.documentElement.setAttribute('data-theme', localStorage.getItem('theme') || 'dark');
+  </script>
+  <link rel="stylesheet" href="../assets/css/Candidate.css?v=20260824">
+  <link rel="stylesheet" href="../assets/css/hr.css?v=20260913c">
+  <link rel="stylesheet" href="../assets/css/senior_manager.css?v=4">
+  <link rel="stylesheet" href="../assets/css/theme_vision.css?v=2">
+</head>
+
+<body>
+  <button class="theme-toggle-btn" onclick="toggleTheme()" title="Toggle theme">
+    <i id="theme-toggle-icon" data-lucide="sun"></i>
+  </button>
+  <button class="mobile-menu-btn" title="Menu">
+    <i data-lucide="menu"></i>
+  </button>
+  <div class="sidebar-backdrop"></div>
+  <div class="mobile-topbar">
+    <img src="../images/Altrium-logo-1.png" alt="Altrium logo" class="brand-logo-img for-light">
+    <img src="../images/Altrium-logo-white.png" alt="Altrium logo" class="brand-logo-img for-dark">
+  </div>
+
+  <div class="app-container">
+    <!-- Sidebar -->
+    <aside class="sidebar">
+      <button class="sidebar-close-btn" title="Close menu">
+        <i data-lucide="x"></i>
+      </button>
+      <div class="sidebar-top">
+        <div class="brand">
+          <img src="../images/Altrium-logo-1.png" alt="Altrium logo" class="brand-logo-img for-light">
+          <img src="../images/Altrium-logo-white.png" alt="Altrium logo" class="brand-logo-img for-dark">
+          <span class="brand-label">Senior Manager</span>
+        </div>
+
+        <nav class="nav-menu">
+          <a href="#" class="nav-item active" id="nav-dashboard" onclick="switchSeniorView(this, 'dashboard')">
+            <i data-lucide="layout-dashboard"></i>
+            <span>Dashboard</span>
+          </a>
+          <a href="#" class="nav-item" id="nav-analytics" onclick="switchSeniorView(this, 'analytics')">
+            <i data-lucide="bar-chart-3"></i>
+            <span>Analytics &amp; Reports</span>
+          </a>
+          <a href="#" class="nav-item" id="nav-performance" onclick="switchSeniorView(this, 'performance')">
+            <i data-lucide="trending-up"></i>
+            <span>Recruitment Performance</span>
+          </a>
+        </nav>
+      </div>
+
+      <div class="sidebar-bottom">
+        <div class="user-profile">
+          <div class="avatar" id="sidebar-avatar">--</div>
+          <div class="user-info">
+            <span class="name" id="sidebar-name">Loading…</span>
+            <span class="email" id="sidebar-email"></span>
+          </div>
+        </div>
+        <button class="sign-out-btn" onclick="window.location.href='../api/logout.php'">
+          <i data-lucide="log-out"></i>
+          <span>Sign Out</span>
+        </button>
+        <button class="collapse-btn">
+          <i data-lucide="chevron-left"></i>
+          <span>Collapse</span>
+        </button>
+      </div>
+    </aside>
+
+    <!-- Main Content -->
+    <main class="main-content">
+      <div id="dashboard-view">
+        <header class="header">
+          <h1>Recruitment Dashboard</h1>
+          <p>High-level overview of recruitment performance across the company</p>
+        </header>
+
+        <div class="metric-grid" id="dashboard-metric-grid"></div>
+
+        <div class="sm-chart-grid">
+          <div class="panel-card sm-chart-card">
+            <div class="panel-header">
+              <h3>Hiring Trend</h3>
+              <p class="sm-chart-sub">Applications received vs. hired, last 6 months</p>
+            </div>
+            <div class="sm-chart-wrap">
+              <canvas id="hiring-trend-chart"></canvas>
+            </div>
+          </div>
+
+          <div class="panel-card sm-chart-card">
+            <div class="panel-header">
+              <h3>Time to Hire</h3>
+              <p class="sm-chart-sub">Average days from application to hire, by hire month</p>
+            </div>
+            <div class="sm-chart-wrap">
+              <canvas id="time-to-hire-chart"></canvas>
+            </div>
+          </div>
+        </div>
+
+        <div class="panel-card">
+          <div class="panel-header">
+            <h3>Pipeline Summary</h3>
+            <p class="sm-chart-sub">Candidates currently at or past each stage</p>
+          </div>
+          <div class="sm-pipeline-grid" id="dashboard-pipeline-grid"></div>
+        </div>
+      </div>
+
+      <div id="analytics-view" style="display: none;">
+        <header class="header">
+          <h1>Analytics &amp; Reports</h1>
+          <p>Deeper look at hiring performance and pipeline health</p>
+        </header>
+
+        <div class="metric-grid" id="analytics-metric-grid"></div>
+
+        <div class="panel-card">
+          <div class="panel-header">
+            <h3>Pipeline Drop-off Funnel</h3>
+            <p class="sm-chart-sub">Candidate progression through hiring stages</p>
+          </div>
+          <div class="sm-chart-wrap sm-chart-wrap-tall">
+            <canvas id="funnel-chart"></canvas>
+          </div>
+          <div class="sm-pipeline-grid" id="analytics-pipeline-grid"></div>
+        </div>
+
+        <div class="panel-card">
+          <div class="panel-header">
+            <h3>Interview Feedback &amp; Ratings</h3>
+            <p class="sm-chart-sub">Based on ratings and recommendations submitted by interviewers and HR</p>
+          </div>
+          <div class="sm-feedback-kpi-row" id="feedback-kpi-row"></div>
+          <div class="sm-chart-grid">
+            <div class="sm-chart-wrap">
+              <canvas id="recommendation-chart"></canvas>
+            </div>
+            <div>
+              <table class="data-table">
+                <thead>
+                  <tr>
+                    <th>Vacancy</th>
+                    <th>Avg. Rating</th>
+                    <th>Feedback</th>
+                    <th>Positive %</th>
+                  </tr>
+                </thead>
+                <tbody id="feedback-by-vacancy-body"></tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div id="performance-view" style="display: none;">
+        <header class="header">
+          <h1>Recruitment Performance</h1>
+          <p>Hiring progress by department</p>
+        </header>
+
+        <div class="sm-dept-summary-grid" id="dept-summary-grid"></div>
+
+        <div class="sm-chart-grid">
+          <div class="panel-card sm-chart-card">
+            <div class="panel-header">
+              <h3>Hiring by Department</h3>
+              <p class="sm-chart-sub">Applicants, shortlisted, and hired</p>
+            </div>
+            <div class="sm-chart-wrap sm-chart-wrap-tall">
+              <canvas id="department-bar-chart"></canvas>
+            </div>
+          </div>
+
+          <div class="panel-card sm-chart-card">
+            <div class="panel-header">
+              <h3>Applicant Distribution</h3>
+              <p class="sm-chart-sub">Share of total applicants by department</p>
+            </div>
+            <div class="sm-chart-wrap sm-chart-wrap-tall">
+              <canvas id="department-pie-chart"></canvas>
+            </div>
+          </div>
+        </div>
+
+        <div class="panel-card">
+          <div class="panel-header">
+            <h3>Department Breakdown</h3>
+          </div>
+          <div class="table-wrap">
+            <table class="data-table">
+              <thead>
+                <tr>
+                  <th>Department</th>
+                  <th>Active Vacancies</th>
+                  <th>Applicants</th>
+                  <th>Shortlisted</th>
+                  <th>Hired</th>
+                  <th>Conversion</th>
+                </tr>
+              </thead>
+              <tbody id="department-table-body"></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </main>
+  </div>
+
+  <script src="../assets/js/theme.js?v=20260824"></script>
+  <script src="../assets/js/senior_manager.js?v=4"></script>
+</body>
+
+</html>

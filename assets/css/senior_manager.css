@@ -1,0 +1,183 @@
+/* Senior Manager dashboard — chart grids, pipeline funnel, department views.
+   Relies on Candidate.css/hr.css for shared variables, .metric-card, .panel-card,
+   and .data-table; theme_vision.css handles the dark/gold glass look automatically. */
+
+.sm-chart-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 20px;
+  margin-bottom: 20px;
+}
+
+@media (max-width: 1024px) {
+  .sm-chart-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+.sm-chart-card {
+  display: flex;
+  flex-direction: column;
+}
+
+.sm-chart-sub {
+  font-size: 12.5px;
+  color: var(--text-muted);
+  margin-top: 2px;
+}
+
+.sm-chart-wrap {
+  position: relative;
+  height: 260px;
+  margin-top: 12px;
+  padding: 6px;
+  box-sizing: border-box;
+}
+
+.sm-chart-wrap-tall {
+  height: 320px;
+}
+
+.sm-pipeline-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(90px, 1fr));
+  gap: 12px;
+  margin-top: 14px;
+}
+
+/* These sit directly inside a .panel-card, right after .panel-header —
+   .panel-card itself has no padding (only .panel-header does), so without
+   this they'd sit flush against the header's border line and the card's
+   own edges. */
+.panel-card > .sm-chart-wrap,
+.panel-card > .sm-pipeline-grid,
+.panel-card > .sm-feedback-kpi-row,
+.panel-card > .sm-chart-grid {
+  padding-left: 20px;
+  padding-right: 20px;
+  padding-bottom: 20px;
+  box-sizing: border-box;
+}
+
+.sm-pipeline-cell {
+  text-align: center;
+  padding: 14px 8px;
+  background-color: var(--bg-overlay-soft);
+  border-radius: 10px;
+}
+
+.sm-pipeline-count {
+  font-size: 20px;
+  font-weight: 700;
+  color: var(--text-main);
+}
+
+.sm-pipeline-stage {
+  font-size: 11.5px;
+  color: var(--text-muted);
+  margin-top: 4px;
+}
+
+.sm-pipeline-drop {
+  font-size: 10.5px;
+  color: var(--badge-red);
+  font-weight: 600;
+  margin-top: 4px;
+}
+
+.sm-dept-summary-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 16px;
+  margin-bottom: 20px;
+}
+
+@media (max-width: 700px) {
+  .sm-dept-summary-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+.sm-dept-summary-card {
+  background-color: var(--bg-card);
+  border: 1px solid var(--border-color);
+  border-radius: 14px;
+  padding: 20px;
+}
+
+.sm-dept-summary-label {
+  font-size: 12px;
+  color: var(--text-muted);
+  margin-bottom: 6px;
+}
+
+.sm-dept-summary-value {
+  font-size: 26px;
+  font-weight: 700;
+  color: var(--text-main);
+}
+
+.sm-dept-summary-note {
+  font-size: 11.5px;
+  color: var(--text-dim);
+  margin-top: 6px;
+}
+
+.sm-conversion-bar {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.sm-conversion-track {
+  flex: 1;
+  height: 6px;
+  background-color: var(--bg-overlay-soft);
+  border-radius: 999px;
+  overflow: hidden;
+  min-width: 60px;
+}
+
+.sm-conversion-fill {
+  height: 100%;
+  background-color: var(--primary-green);
+  border-radius: 999px;
+}
+
+.sm-conversion-value {
+  font-size: 12px;
+  color: var(--text-muted);
+  width: 36px;
+  flex-shrink: 0;
+}
+
+.sm-empty {
+  text-align: center;
+  padding: 40px 20px;
+  color: var(--text-dim);
+  font-size: 13px;
+}
+
+.sm-feedback-kpi-row {
+  display: flex;
+  gap: 24px;
+  margin: 20px 0 18px;
+  flex-wrap: wrap;
+}
+
+.sm-feedback-kpi {
+  display: flex;
+  flex-direction: column;
+}
+
+.sm-feedback-kpi-value {
+  font-size: 22px;
+  font-weight: 700;
+  color: var(--text-main);
+}
+
+.sm-feedback-kpi-label {
+  font-size: 11.5px;
+  color: var(--text-muted);
+  margin-top: 2px;
+}

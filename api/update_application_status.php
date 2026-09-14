@@ -58,7 +58,11 @@ if (!$app['shortlisted']) {
     exit();
 }
 
-$stmt = $conn->prepare("UPDATE applications SET status = ? WHERE id = ?");
+if ($status === 'hired') {
+    $stmt = $conn->prepare("UPDATE applications SET status = ?, hired_at = NOW() WHERE id = ?");
+} else {
+    $stmt = $conn->prepare("UPDATE applications SET status = ?, hired_at = NULL WHERE id = ?");
+}
 $stmt->bind_param("si", $status, $applicationId);
 $stmt->execute();
 $stmt->close();
