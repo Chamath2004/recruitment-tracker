@@ -1376,6 +1376,120 @@ body {
   cursor: not-allowed;
 }
 
+.interview-confirm-row {
+  margin-top: 12px;
+  padding-top: 12px;
+  border-top: 1px dashed var(--border-dashed);
+}
+
+.interview-confirm-row p {
+  font-size: 12.5px;
+  color: var(--text-body);
+  margin: 0 0 8px 0;
+}
+
+.interview-confirm-row.confirmed {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12.5px;
+  font-weight: 600;
+  color: var(--badge-green-text);
+}
+
+.interview-confirm-row.confirmed svg {
+  width: 14px;
+  height: 14px;
+}
+
+.interview-confirm-row.requested {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  color: var(--warning-text);
+}
+
+.interview-confirm-row.requested svg {
+  width: 14px;
+  height: 14px;
+  margin-top: 2px;
+  flex-shrink: 0;
+}
+
+.interview-confirm-row.requested p {
+  color: var(--text-body);
+  margin: 0;
+}
+
+.interview-confirm-note {
+  font-style: italic;
+  color: var(--text-muted) !important;
+  margin-top: 4px !important;
+}
+
+.interview-confirm-actions {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.interview-confirm-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 7px 12px;
+  border-radius: 8px;
+  font-size: 12.5px;
+  font-weight: 600;
+  cursor: pointer;
+  border: 1px solid var(--border-color);
+  background: transparent;
+  color: var(--text-body);
+}
+
+.interview-confirm-btn svg {
+  width: 13px;
+  height: 13px;
+}
+
+.interview-confirm-btn.yes {
+  background-color: var(--primary-green);
+  color: white;
+  border-color: transparent;
+}
+
+.interview-confirm-btn.no:hover {
+  border-color: var(--primary-green);
+  color: var(--primary-green);
+}
+
+.interview-suggest-form {
+  margin-top: 12px;
+  padding: 12px;
+  border-radius: 8px;
+  background-color: var(--bg-overlay-soft);
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.interview-suggest-form .form-group {
+  margin: 0;
+}
+
+.interview-suggest-form textarea {
+  width: 100%;
+  padding: 8px 10px;
+  border: 1px solid var(--border-color);
+  border-radius: 8px;
+  font-size: 13px;
+  font-family: inherit;
+  outline: none;
+  resize: vertical;
+  background-color: var(--bg-input);
+  color: var(--text-main);
+}
+
 .success-icon-circle {
   background-color: var(--badge-blue-bg);
   width: 64px;

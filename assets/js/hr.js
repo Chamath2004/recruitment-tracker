@@ -864,7 +864,7 @@ function renderInterviewList() {
   });
 
   if (filtered.length === 0) {
-    tbody.innerHTML = `<tr><td colspan="8" class="panel-empty">No interviews match your search.</td></tr>`;
+    tbody.innerHTML = `<tr><td colspan="9" class="panel-empty">No interviews match your search.</td></tr>`;
     return;
   }
 
@@ -886,6 +886,7 @@ function renderInterviewList() {
         ` : ''}
       </td>
       <td><span class="stage-pill ${interviewStatusPillClass(iv.status)}">${iv.status.charAt(0).toUpperCase() + iv.status.slice(1)}</span></td>
+      <td>${renderConfirmationCell(iv)}</td>
       <td>
         <div class="vacancy-card-actions">
           ${iv.status === 'scheduled' ? `
@@ -899,6 +900,69 @@ function renderInterviewList() {
   `).join('');
 
   lucide.createIcons();
+}
+
+function confirmationPillClass(status) {
+  const map = { pending: 'submitted', confirmed: 'hired', reschedule_requested: 'in-review' };
+  return map[status] || 'submitted';
+}
+
+function confirmationLabel(status) {
+  const map = { pending: 'Awaiting response', confirmed: 'Confirmed', reschedule_requested: 'Reschedule requested' };
+  return map[status] || status;
+}
+
+function renderConfirmationCell(iv) {
+  if (iv.status !== 'scheduled') return '<span class="cell-sub">—</span>';
+
+  const pill = `<span class="stage-pill ${confirmationPillClass(iv.confirmation_status)}">${confirmationLabel(iv.confirmation_status)}</span>`;
+
+  if (iv.confirmation_status === 'reschedule_requested') {
+    return `
+      ${pill}
+      <div class="cell-sub">Suggested: ${formatInterviewDateTime(iv.candidate_suggested_date, iv.candidate_suggested_time)}</div>
+      ${iv.candidate_note ? `<div class="cell-sub" style="font-style:italic;">"${iv.candidate_note}"</div>` : ''}
+      <button class="candidate-action-btn shortlist" style="margin-top:6px;" onclick="acceptSuggestedInterviewTime(${iv.id})">Accept new time</button>
+    `;
+  }
+
+  return pill;
+}
+
+function acceptSuggestedInterviewTime(id) {
+  const iv = interviewList.find(item => item.id === id);
+  if (!iv || !iv.candidate_suggested_date || !iv.candidate_suggested_time) return;
+
+  if (!confirm(`Reschedule to the candidate's suggested time: ${formatInterviewDateTime(iv.candidate_suggested_date, iv.candidate_suggested_time)}?`)) return;
+
+  const payload = {
+    id: iv.id,
+    application_id: iv.application_id,
+    interview_type: iv.interview_type,
+    interview_date: iv.candidate_suggested_date,
+    interview_time: iv.candidate_suggested_time,
+    duration_minutes: iv.duration_minutes,
+    mode: iv.mode,
+    interviewer_id: iv.interviewer_id,
+    meeting_link: iv.meeting_link,
+    notes: iv.notes
+  };
+
+  fetch('../api/save_interview.php', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(payload)
+  })
+    .then(response => response.json())
+    .then(result => {
+      if (!result.success) {
+        alert(result.message || 'Failed to reschedule.');
+        return;
+      }
+      loadInterviews();
+      loadHrDashboardStats();
+    })
+    .catch(error => console.error('Error accepting suggested time:', error));
 }
 
 function getTodayDateStr() {

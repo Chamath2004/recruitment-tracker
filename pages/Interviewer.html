@@ -12,10 +12,10 @@
   <script>
     document.documentElement.setAttribute('data-theme', localStorage.getItem('theme') || 'dark');
   </script>
-  <link rel="stylesheet" href="../assets/css/Candidate.css?v=20260824">
+  <link rel="stylesheet" href="../assets/css/Candidate.css?v=20260916">
   <link rel="stylesheet" href="../assets/css/hr.css?v=20260913c">
   <link rel="stylesheet" href="../assets/css/interviewer.css?v=20260824">
-  <link rel="stylesheet" href="../assets/css/theme_vision.css?v=2">
+  <link rel="stylesheet" href="../assets/css/theme_vision.css?v=3">
 </head>
 
 <body>
@@ -56,6 +56,10 @@
           <a href="#" class="nav-item" id="nav-submit-feedback" onclick="switchInterviewerView(this, 'submit-feedback-list')">
             <i data-lucide="message-square-plus"></i>
             <span>Submit Feedback</span>
+          </a>
+          <a href="#" class="nav-item" id="nav-department-feedback" onclick="switchInterviewerView(this, 'department-feedback')">
+            <i data-lucide="building-2"></i>
+            <span>Department Feedback</span>
           </a>
         </nav>
       </div>
@@ -128,6 +132,22 @@
         </header>
 
         <div id="sf-list"></div>
+      </div>
+
+      <div id="department-feedback-view" style="display: none;">
+        <header class="header">
+          <h1>Department Feedback</h1>
+          <p>See feedback fellow interviewers in your department have given</p>
+        </header>
+
+        <div class="vacancy-toolbar">
+          <div class="vacancy-search-wrapper">
+            <i data-lucide="search"></i>
+            <input type="text" id="df-search-input" placeholder="Search by candidate or position..." oninput="renderDepartmentFeedback()">
+          </div>
+        </div>
+
+        <div id="df-list"></div>
       </div>
 
       <div id="submit-feedback-view" style="display: none;">

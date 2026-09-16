@@ -1197,102 +1197,220 @@ function renderApplicationStatusNote(status, jobTitle) {
   return '';
 }
 
+let applicationsCache = [];
+let openSuggestFormInterviewId = null;
+
 function loadUserApplications() {
   switchView('applications');
 
   fetch('../api/get_applications.php')
     .then(response => response.json())
     .then(data => {
-      if (data.success) {
-        const apps = data.data;
-
-        if (apps.length === 0) {
-          applicationsContainer.innerHTML = `
-            <div style="padding: 40px; text-align: center;">
-              <h2 class="app-list-heading">My Applications</h2>
-              <p class="app-list-subheading">You haven't submitted any applications yet.</p>
-            </div>
-          `;
-          return;
-        }
-
-        let appsHtml = `
-          <div style="padding: 30px; width: 100%;">
-            <h2 class="app-list-heading">My Applications</h2>
-            <p class="app-list-subheading" style="margin-bottom: 24px;">Track the progress of your job applications</p>
-        `;
-
-        const interviewModeLabel = { video: 'Google Meet', phone: 'Phone', onsite: 'Onsite' };
-
-        apps.forEach(app => {
-          const formattedDate = app.created_at ? app.created_at.split(' ')[0] : 'Recent';
-          const iv = app.interview;
-
-          let interviewHtml = '';
-          if (iv) {
-            const ivDate = new Date(`${iv.interview_date}T${iv.interview_time}`);
-            const ivDateStr = isNaN(ivDate.getTime()) ? iv.interview_date : ivDate.toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' });
-            const ivTimeStr = isNaN(ivDate.getTime()) ? iv.interview_time : ivDate.toLocaleTimeString(undefined, { hour: 'numeric', minute: '2-digit' });
-            const isCompleted = iv.status === 'completed';
-
-            let linkHtml = '';
-            const isUrl = iv.meeting_link && /^https?:\/\//i.test(iv.meeting_link.trim());
-            if (iv.mode === 'video' && isUrl && !isCompleted && !isNaN(ivDate.getTime())) {
-              const joinOpensAt = new Date(ivDate.getTime() - 10 * 60 * 1000);
-              const joinClosesAt = new Date(ivDate.getTime() + (iv.duration_minutes + 15) * 60 * 1000);
-              const now = new Date();
-              if (now >= joinOpensAt && now <= joinClosesAt) {
-                linkHtml = `<a class="interview-join-btn" href="${iv.meeting_link.trim()}" target="_blank" rel="noopener noreferrer"><i data-lucide="video"></i> Join Meeting</a>`;
-              } else if (now < joinOpensAt) {
-                linkHtml = `<button class="interview-join-btn disabled" disabled><i data-lucide="video"></i> Join opens 10 min before</button>`;
-              }
-            } else if (iv.mode === 'onsite' && iv.meeting_link) {
-              linkHtml = `<p class="interview-info-detail">${iv.meeting_link}</p>`;
-            } else if (iv.mode === 'video' && iv.meeting_link && !isUrl) {
-              linkHtml = `<p class="interview-info-detail">${iv.meeting_link}</p>`;
-            }
-
-            interviewHtml = `
-              <div class="interview-info-box">
-                <div class="interview-info-header">
-                  <i data-lucide="${isCompleted ? 'check-circle' : 'calendar-clock'}"></i>
-                  <span>${isCompleted ? 'Interview completed' : 'Interview scheduled'}</span>
-                </div>
-                <p class="interview-info-detail">${iv.interview_type} • ${ivDateStr} at ${ivTimeStr} (${iv.duration_minutes} min)</p>
-                <p class="interview-info-detail">${interviewModeLabel[iv.mode] || iv.mode}${iv.interviewer ? ' with ' + iv.interviewer : ''}</p>
-                ${linkHtml}
-              </div>
-            `;
-          }
-
-          const statusBadge = applicationStatusBadge(app.status);
-
-          appsHtml += `
-            <div class="application-card">
-              <div style="display: flex; justify-content: space-between; align-items: flex-start;">
-                <div>
-                  <h3>${app.job_title}</h3>
-                  <p class="meta">Altrium Inc. • Applied on ${formattedDate}</p>
-                </div>
-                <span class="application-status-badge ${statusBadge.cls}">${statusBadge.label}</span>
-              </div>
-              <div class="application-progress-row">
-                ${renderApplicationProgress(app.status, formattedDate)}
-              </div>
-              ${interviewHtml}
-              ${renderApplicationStatusNote(app.status, app.job_title)}
-            </div>
-          `;
-        });
-
-        appsHtml += `</div>`;
-        applicationsContainer.innerHTML = appsHtml;
-        lucide.createIcons();
-      } else {
+      if (!data.success) {
         alert("Failed to load applications.");
+        return;
       }
+      applicationsCache = data.data;
+      renderApplicationsList();
     })
     .catch(error => {
       console.error('Error:', error);
     });
+}
+
+function renderApplicationsList() {
+  const apps = applicationsCache;
+
+  if (apps.length === 0) {
+    applicationsContainer.innerHTML = `
+      <div style="padding: 40px; text-align: center;">
+        <h2 class="app-list-heading">My Applications</h2>
+        <p class="app-list-subheading">You haven't submitted any applications yet.</p>
+      </div>
+    `;
+    return;
+  }
+
+  let appsHtml = `
+    <div style="padding: 30px; width: 100%;">
+      <h2 class="app-list-heading">My Applications</h2>
+      <p class="app-list-subheading" style="margin-bottom: 24px;">Track the progress of your job applications</p>
+  `;
+
+  const interviewModeLabel = { video: 'Google Meet', phone: 'Phone', onsite: 'Onsite' };
+
+  apps.forEach(app => {
+    const formattedDate = app.created_at ? app.created_at.split(' ')[0] : 'Recent';
+    const iv = app.interview;
+
+    let interviewHtml = '';
+    if (iv) {
+      const ivDate = new Date(`${iv.interview_date}T${iv.interview_time}`);
+      const ivDateStr = isNaN(ivDate.getTime()) ? iv.interview_date : ivDate.toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' });
+      const ivTimeStr = isNaN(ivDate.getTime()) ? iv.interview_time : ivDate.toLocaleTimeString(undefined, { hour: 'numeric', minute: '2-digit' });
+      const isCompleted = iv.status === 'completed';
+
+      let linkHtml = '';
+      const isUrl = iv.meeting_link && /^https?:\/\//i.test(iv.meeting_link.trim());
+      if (iv.mode === 'video' && isUrl && !isCompleted && !isNaN(ivDate.getTime())) {
+        const joinOpensAt = new Date(ivDate.getTime() - 10 * 60 * 1000);
+        const joinClosesAt = new Date(ivDate.getTime() + (iv.duration_minutes + 15) * 60 * 1000);
+        const now = new Date();
+        if (now >= joinOpensAt && now <= joinClosesAt) {
+          linkHtml = `<a class="interview-join-btn" href="${iv.meeting_link.trim()}" target="_blank" rel="noopener noreferrer"><i data-lucide="video"></i> Join Meeting</a>`;
+        } else if (now < joinOpensAt) {
+          linkHtml = `<button class="interview-join-btn disabled" disabled><i data-lucide="video"></i> Join opens 10 min before</button>`;
+        }
+      } else if (iv.mode === 'onsite' && iv.meeting_link) {
+        linkHtml = `<p class="interview-info-detail">${iv.meeting_link}</p>`;
+      } else if (iv.mode === 'video' && iv.meeting_link && !isUrl) {
+        linkHtml = `<p class="interview-info-detail">${iv.meeting_link}</p>`;
+      }
+
+      interviewHtml = `
+        <div class="interview-info-box">
+          <div class="interview-info-header">
+            <i data-lucide="${isCompleted ? 'check-circle' : 'calendar-clock'}"></i>
+            <span>${isCompleted ? 'Interview completed' : 'Interview scheduled'}</span>
+          </div>
+          <p class="interview-info-detail">${iv.interview_type} • ${ivDateStr} at ${ivTimeStr} (${iv.duration_minutes} min)</p>
+          <p class="interview-info-detail">${interviewModeLabel[iv.mode] || iv.mode}${iv.interviewer ? ' with ' + iv.interviewer : ''}</p>
+          ${linkHtml}
+          ${renderInterviewConfirmation(iv)}
+        </div>
+      `;
+    }
+
+    const statusBadge = applicationStatusBadge(app.status);
+
+    appsHtml += `
+      <div class="application-card">
+        <div style="display: flex; justify-content: space-between; align-items: flex-start;">
+          <div>
+            <h3>${app.job_title}</h3>
+            <p class="meta">Altrium Inc. • Applied on ${formattedDate}</p>
+          </div>
+          <span class="application-status-badge ${statusBadge.cls}">${statusBadge.label}</span>
+        </div>
+        <div class="application-progress-row">
+          ${renderApplicationProgress(app.status, formattedDate)}
+        </div>
+        ${interviewHtml}
+        ${renderApplicationStatusNote(app.status, app.job_title)}
+      </div>
+    `;
+  });
+
+  appsHtml += `</div>`;
+  applicationsContainer.innerHTML = appsHtml;
+  lucide.createIcons();
+}
+
+// ================= INTERVIEW TIME CONFIRMATION =================
+
+function renderInterviewConfirmation(iv) {
+  if (iv.status === 'completed') return '';
+
+  if (iv.confirmation_status === 'confirmed') {
+    return `
+      <div class="interview-confirm-row confirmed">
+        <i data-lucide="check-circle"></i> You confirmed this time works for you.
+      </div>
+    `;
+  }
+
+  if (iv.confirmation_status === 'reschedule_requested') {
+    const sDateTime = new Date(`${iv.candidate_suggested_date}T${iv.candidate_suggested_time}`);
+    const sDateStr = isNaN(sDateTime.getTime()) ? iv.candidate_suggested_date : sDateTime.toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' });
+    const sTimeStr = isNaN(sDateTime.getTime()) ? iv.candidate_suggested_time : sDateTime.toLocaleTimeString(undefined, { hour: 'numeric', minute: '2-digit' });
+    return `
+      <div class="interview-confirm-row requested">
+        <i data-lucide="clock"></i>
+        <div>
+          <p>You suggested <strong>${sDateStr} at ${sTimeStr}</strong> instead. Waiting for HR to confirm.</p>
+          ${iv.candidate_note ? `<p class="interview-confirm-note">"${iv.candidate_note}"</p>` : ''}
+        </div>
+      </div>
+    `;
+  }
+
+  const isFormOpen = openSuggestFormInterviewId === iv.id;
+  return `
+    <div class="interview-confirm-row pending">
+      <p>Does this time work for you?</p>
+      <div class="interview-confirm-actions">
+        <button class="interview-confirm-btn yes" onclick="confirmInterviewTime(${iv.id})"><i data-lucide="check"></i> Yes, works for me</button>
+        <button class="interview-confirm-btn no" onclick="toggleSuggestTimeForm(${iv.id})"><i data-lucide="calendar-clock"></i> Suggest a different time</button>
+      </div>
+      ${isFormOpen ? `
+        <div class="interview-suggest-form">
+          <div class="form-group">
+            <label>Preferred Date</label>
+            <input type="date" id="suggest-date-${iv.id}">
+          </div>
+          <div class="form-group">
+            <label>Preferred Time</label>
+            <input type="time" id="suggest-time-${iv.id}">
+          </div>
+          <div class="form-group">
+            <label>Note (optional)</label>
+            <textarea id="suggest-note-${iv.id}" rows="2" placeholder="Why this time works better..."></textarea>
+          </div>
+          <div class="interview-confirm-actions">
+            <button class="cancel-btn" onclick="toggleSuggestTimeForm(${iv.id})">Cancel</button>
+            <button class="continue-btn" onclick="submitSuggestedTime(${iv.id})">Send Suggestion</button>
+          </div>
+        </div>
+      ` : ''}
+    </div>
+  `;
+}
+
+function toggleSuggestTimeForm(interviewId) {
+  openSuggestFormInterviewId = (openSuggestFormInterviewId === interviewId) ? null : interviewId;
+  renderApplicationsList();
+}
+
+function confirmInterviewTime(interviewId) {
+  fetch('../api/respond_interview_time.php', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ interview_id: interviewId, action: 'confirm' })
+  })
+    .then(response => response.json())
+    .then(result => {
+      if (!result.success) {
+        alert(result.message || 'Failed to confirm this time.');
+        return;
+      }
+      loadUserApplications();
+    })
+    .catch(error => console.error('Error confirming interview time:', error));
+}
+
+function submitSuggestedTime(interviewId) {
+  const date = document.getElementById(`suggest-date-${interviewId}`).value;
+  const time = document.getElementById(`suggest-time-${interviewId}`).value;
+  const note = document.getElementById(`suggest-note-${interviewId}`).value.trim();
+
+  if (!date || !time) {
+    alert('Please pick both a date and a time you would prefer.');
+    return;
+  }
+
+  fetch('../api/respond_interview_time.php', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ interview_id: interviewId, action: 'suggest', suggested_date: date, suggested_time: time, note })
+  })
+    .then(response => response.json())
+    .then(result => {
+      if (!result.success) {
+        alert(result.message || 'Failed to send your suggested time.');
+        return;
+      }
+      openSuggestFormInterviewId = null;
+      loadUserApplications();
+    })
+    .catch(error => console.error('Error sending suggested time:', error));
 }

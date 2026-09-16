@@ -146,7 +146,8 @@ html:not([data-theme="light"]) .step-item.completed .step-number,
 html:not([data-theme="light"]) .submit-btn,
 html:not([data-theme="light"]) .interview-join-btn,
 html:not([data-theme="light"]) .profile-edit-btn.saving,
-html:not([data-theme="light"]) .cvs-run-btn {
+html:not([data-theme="light"]) .cvs-run-btn,
+html:not([data-theme="light"]) .interview-confirm-btn.yes {
   color: #0b0f0a;
 }
 

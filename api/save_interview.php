@@ -66,7 +66,7 @@ if ($interviewerId) {
 }
 
 if ($id) {
-    $stmt = $conn->prepare("UPDATE interviews SET interview_type = ?, interview_date = ?, interview_time = ?, duration_minutes = ?, interviewer = ?, interviewer_id = ?, mode = ?, meeting_link = ?, notes = ? WHERE id = ?");
+    $stmt = $conn->prepare("UPDATE interviews SET interview_type = ?, interview_date = ?, interview_time = ?, duration_minutes = ?, interviewer = ?, interviewer_id = ?, mode = ?, meeting_link = ?, notes = ?, confirmation_status = 'pending', candidate_suggested_date = NULL, candidate_suggested_time = NULL, candidate_note = NULL WHERE id = ?");
     $stmt->bind_param("sssisisssi", $interviewType, $interviewDate, $interviewTime, $duration, $interviewerName, $interviewerId, $mode, $meetingLink, $notes, $id);
     $stmt->execute();
     $stmt->close();

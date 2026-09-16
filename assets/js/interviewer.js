@@ -21,12 +21,15 @@ function switchInterviewerView(navEl, view) {
   document.getElementById('my-interviews-view').style.display = view === 'my-interviews' ? 'block' : 'none';
   document.getElementById('assigned-candidates-view').style.display = view === 'assigned-candidates' ? 'block' : 'none';
   document.getElementById('submit-feedback-list-view').style.display = view === 'submit-feedback-list' ? 'block' : 'none';
+  document.getElementById('department-feedback-view').style.display = view === 'department-feedback' ? 'block' : 'none';
   document.getElementById('submit-feedback-view').style.display = 'none';
 
   if (view === 'assigned-candidates') {
     loadAssignedCandidates();
   } else if (view === 'submit-feedback-list') {
     loadMyInterviews();
+  } else if (view === 'department-feedback') {
+    loadDepartmentFeedback();
   }
 }
 
@@ -305,6 +308,7 @@ function openFeedbackPage(interviewId, origin) {
   document.getElementById('my-interviews-view').style.display = 'none';
   document.getElementById('assigned-candidates-view').style.display = 'none';
   document.getElementById('submit-feedback-list-view').style.display = 'none';
+  document.getElementById('department-feedback-view').style.display = 'none';
   document.getElementById('submit-feedback-view').style.display = 'block';
   lucide.createIcons();
 }
@@ -463,6 +467,63 @@ function renderAssignedCandidates() {
         </div>
       `;
     }).join('');
+
+  lucide.createIcons();
+}
+
+// ================= DEPARTMENT FEEDBACK =================
+
+let departmentFeedbackList = [];
+
+function loadDepartmentFeedback() {
+  fetch('../api/get_department_feedback.php')
+    .then(response => response.json())
+    .then(result => {
+      if (!result.success) return;
+      departmentFeedbackList = result.data;
+      renderDepartmentFeedback();
+    })
+    .catch(error => console.error('Error loading department feedback:', error));
+}
+
+function renderDepartmentFeedback() {
+  const container = document.getElementById('df-list');
+  if (!container) return;
+
+  const searchTerm = (document.getElementById('df-search-input').value || '').toLowerCase();
+  const filtered = departmentFeedbackList.filter(f =>
+    !searchTerm ||
+    f.candidate_name.toLowerCase().includes(searchTerm) ||
+    f.job_title.toLowerCase().includes(searchTerm)
+  );
+
+  if (filtered.length === 0) {
+    container.innerHTML = `<div class="panel-empty ac-empty"><i data-lucide="file-text"></i><p>${departmentFeedbackList.length === 0 ? 'No feedback from your department yet.' : 'No feedback matches your search.'}</p></div>`;
+    lucide.createIcons();
+    return;
+  }
+
+  container.innerHTML = filtered.map(f => {
+    const { dateStr } = formatMiDate(f.interview_date, f.interview_time);
+    const interviewerName = `${f.interviewer_first_name} ${f.interviewer_last_name}`.trim();
+    return `
+      <div class="mi-card completed">
+        <div class="mi-card-left">
+          <div class="mi-avatar ${f.isOwn ? 'blue' : 'emerald'}">${getInitials(f.candidate_name) || '?'}</div>
+          <div>
+            <div class="mi-card-name">${f.candidate_name}</div>
+            <div class="mi-card-sub">${f.job_title} · ${f.interview_type}</div>
+            <div class="mi-card-sub2">Interviewed ${dateStr} · Feedback by ${f.isOwn ? 'you' : interviewerName}</div>
+            ${f.comments ? `<p class="df-comments">${f.comments}</p>` : ''}
+          </div>
+        </div>
+        <div class="mi-card-right">
+          <span class="feedback-stars">${starDisplay(f.rating)}</span>
+          <span class="stage-pill ${recommendationPillClass(f.recommendation)}">${recommendationLabel(f.recommendation)}</span>
+        </div>
+      </div>
+    `;
+  }).join('');
 
   lucide.createIcons();
 }
