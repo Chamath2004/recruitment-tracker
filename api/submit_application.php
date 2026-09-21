@@ -9,6 +9,7 @@ if (empty($_SESSION['candidate_id'])) {
 }
 
 require_once __DIR__ . '/db.php';
+require_once __DIR__ . '/email_helper.php';
 
 if ($conn->connect_error) {
     echo json_encode(["success" => false, "message" => "Database connection failed"]);
@@ -28,6 +29,17 @@ $resumePath = null;
 
 if (!$jobTitle || !$fullName || !$email) {
     echo json_encode(["success" => false, "message" => "Full name and email are required to submit an application."]);
+    exit();
+}
+
+$dupStmt = $conn->prepare("SELECT id FROM applications WHERE candidate_id = ? AND job_title = ? AND status != 'rejected' LIMIT 1");
+$dupStmt->bind_param("is", $candidateId, $jobTitle);
+$dupStmt->execute();
+$isDuplicate = $dupStmt->get_result()->num_rows > 0;
+$dupStmt->close();
+
+if ($isDuplicate) {
+    echo json_encode(["success" => false, "message" => "You have already applied for this role."]);
     exit();
 }
 
@@ -91,6 +103,8 @@ if ($stmt->execute()) {
     $notifStmt->bind_param("is", $candidateId, $message);
     $notifStmt->execute();
     $notifStmt->close();
+
+    sendCandidateEmail($email, $fullName, "Application Received - $jobTitle", "<p>$message</p>");
 
     echo json_encode(["success" => true, "message" => "Application saved successfully!"]);
 } else {

@@ -9,6 +9,7 @@ if (empty($_SESSION['hr_admin_id'])) {
 }
 
 require_once __DIR__ . '/db.php';
+require_once __DIR__ . '/email_helper.php';
 
 if ($conn->connect_error) {
     echo json_encode(["success" => false, "message" => "Database connection failed"]);
@@ -24,7 +25,13 @@ if (!$id || !in_array($status, ['scheduled', 'completed', 'cancelled'], true)) {
     exit();
 }
 
-$stmt = $conn->prepare("SELECT candidate_id, job_title, interview_type, interview_date, interview_time FROM interviews WHERE id = ?");
+$stmt = $conn->prepare("
+    SELECT i.candidate_id, i.job_title, i.interview_type, i.interview_date, i.interview_time,
+        a.full_name, a.email
+    FROM interviews i
+    LEFT JOIN applications a ON a.id = i.application_id
+    WHERE i.id = ?
+");
 $stmt->bind_param("i", $id);
 $stmt->execute();
 $result = $stmt->get_result();
@@ -49,6 +56,8 @@ if ($status === 'cancelled') {
     $notifStmt->bind_param("is", $candidateId, $message);
     $notifStmt->execute();
     $notifStmt->close();
+
+    sendCandidateEmail($interview['email'], $interview['full_name'], "Interview Cancelled - {$interview['job_title']}", "<p>$message</p>");
 }
 
 echo json_encode(["success" => true]);

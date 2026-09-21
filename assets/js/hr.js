@@ -884,6 +884,7 @@ function renderInterviewList() {
             </a>
           </div>
         ` : ''}
+        ${iv.mode === 'onsite' && iv.visitor_id ? `<div class="cell-sub">Visitor ID: <strong>${iv.visitor_id}</strong></div>` : ''}
       </td>
       <td><span class="stage-pill ${interviewStatusPillClass(iv.status)}">${iv.status.charAt(0).toUpperCase() + iv.status.slice(1)}</span></td>
       <td>${renderConfirmationCell(iv)}</td>
@@ -1087,6 +1088,8 @@ function openInterviewModal(id) {
   autoFillMeetingLink();
 }
 
+const OFFICE_ADDRESS = 'Level 3, Onyx Tower, 475 Sri Jayawardenepura Mawatha, Sri Jayawardenepura Kotte 10100';
+
 function updateMeetingLinkControls() {
   const modeEl = document.getElementById('if-mode');
   const generateBtn = document.getElementById('if-link-generate-btn');
@@ -1100,6 +1103,10 @@ function updateMeetingLinkControls() {
   if (isOnsite && /^https?:\/\/meet\.google\.com/i.test(linkEl.value)) {
     linkEl.value = '';
     linkEl.dataset.auto = 'true';
+  }
+
+  if (isOnsite && linkEl.dataset.auto !== 'false' && !linkEl.value.trim()) {
+    linkEl.value = OFFICE_ADDRESS;
   }
 }
 

@@ -151,7 +151,8 @@ html:not([data-theme="light"]) .interview-confirm-btn.yes {
   color: #0b0f0a;
 }
 
-html:not([data-theme="light"]) .cvs-run-btn:disabled {
+html:not([data-theme="light"]) .cvs-run-btn:disabled,
+html:not([data-theme="light"]) .submit-btn:disabled {
   color: var(--text-dim);
 }
 

@@ -9,6 +9,7 @@ if (empty($_SESSION['hr_admin_id'])) {
 }
 
 require_once __DIR__ . '/db.php';
+require_once __DIR__ . '/email_helper.php';
 
 if ($conn->connect_error) {
     echo json_encode(["success" => false, "message" => "Database connection failed"]);
@@ -27,6 +28,10 @@ $interviewerId = isset($data['interviewer_id']) && $data['interviewer_id'] ? (in
 $mode = trim($data['mode'] ?? 'video');
 $meetingLink = trim($data['meeting_link'] ?? '');
 $notes = trim($data['notes'] ?? '');
+
+function generateVisitorId() {
+    return 'AV-' . strtoupper(bin2hex(random_bytes(3)));
+}
 
 if (!$applicationId || !$interviewType || !$interviewDate || !$interviewTime) {
     echo json_encode(["success" => false, "message" => "Candidate, interview type, date, and time are required."]);
@@ -66,15 +71,27 @@ if ($interviewerId) {
 }
 
 if ($id) {
-    $stmt = $conn->prepare("UPDATE interviews SET interview_type = ?, interview_date = ?, interview_time = ?, duration_minutes = ?, interviewer = ?, interviewer_id = ?, mode = ?, meeting_link = ?, notes = ?, confirmation_status = 'pending', candidate_suggested_date = NULL, candidate_suggested_time = NULL, candidate_note = NULL WHERE id = ?");
-    $stmt->bind_param("sssisisssi", $interviewType, $interviewDate, $interviewTime, $duration, $interviewerName, $interviewerId, $mode, $meetingLink, $notes, $id);
+    $visitorId = null;
+    if ($mode === 'onsite') {
+        $existingStmt = $conn->prepare("SELECT visitor_id FROM interviews WHERE id = ?");
+        $existingStmt->bind_param("i", $id);
+        $existingStmt->execute();
+        $existingRow = $existingStmt->get_result()->fetch_assoc();
+        $existingStmt->close();
+        $visitorId = !empty($existingRow['visitor_id']) ? $existingRow['visitor_id'] : generateVisitorId();
+    }
+
+    $stmt = $conn->prepare("UPDATE interviews SET interview_type = ?, interview_date = ?, interview_time = ?, duration_minutes = ?, interviewer = ?, interviewer_id = ?, mode = ?, meeting_link = ?, visitor_id = ?, notes = ?, confirmation_status = 'pending', candidate_suggested_date = NULL, candidate_suggested_time = NULL, candidate_note = NULL WHERE id = ?");
+    $stmt->bind_param("sssisissssi", $interviewType, $interviewDate, $interviewTime, $duration, $interviewerName, $interviewerId, $mode, $meetingLink, $visitorId, $notes, $id);
     $stmt->execute();
     $stmt->close();
 
     $message = "Your $interviewType interview for $jobTitle has been rescheduled to $interviewDate at $interviewTime.";
 } else {
-    $stmt = $conn->prepare("INSERT INTO interviews (application_id, candidate_id, candidate_name, job_title, interview_type, interview_date, interview_time, duration_minutes, interviewer, interviewer_id, mode, meeting_link, notes, status) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'scheduled')");
-    $stmt->bind_param("iisssssisisss", $applicationId, $candidateId, $candidateName, $jobTitle, $interviewType, $interviewDate, $interviewTime, $duration, $interviewerName, $interviewerId, $mode, $meetingLink, $notes);
+    $visitorId = $mode === 'onsite' ? generateVisitorId() : null;
+
+    $stmt = $conn->prepare("INSERT INTO interviews (application_id, candidate_id, candidate_name, job_title, interview_type, interview_date, interview_time, duration_minutes, interviewer, interviewer_id, mode, meeting_link, visitor_id, notes, status) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'scheduled')");
+    $stmt->bind_param("iisssssisissss", $applicationId, $candidateId, $candidateName, $jobTitle, $interviewType, $interviewDate, $interviewTime, $duration, $interviewerName, $interviewerId, $mode, $meetingLink, $visitorId, $notes);
 
     $stmt->execute();
     $id = $conn->insert_id;
@@ -92,6 +109,8 @@ $notifStmt = $conn->prepare("INSERT INTO notifications (candidate_id, message, t
 $notifStmt->bind_param("is", $candidateId, $message);
 $notifStmt->execute();
 $notifStmt->close();
+
+sendCandidateEmail($app['email'], $candidateName, "Interview Scheduled - $jobTitle", "<p>$message</p>");
 
 echo json_encode(["success" => true, "id" => $id]);
 

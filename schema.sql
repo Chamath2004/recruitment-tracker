@@ -160,6 +160,7 @@ CREATE TABLE `interviews` (
   `interviewer_id` int(11) DEFAULT NULL,
   `mode` enum('video','phone','onsite') DEFAULT 'video',
   `meeting_link` varchar(500) DEFAULT NULL,
+  `visitor_id` varchar(20) DEFAULT NULL,
   `notes` text DEFAULT NULL,
   `status` enum('scheduled','completed','cancelled') DEFAULT 'scheduled',
   `confirmation_status` enum('pending','confirmed','reschedule_requested') NOT NULL DEFAULT 'pending',
@@ -186,6 +187,21 @@ CREATE TABLE `notifications` (
   PRIMARY KEY (`id`),
   KEY `idx_candidate_id` (`candidate_id`)
 ) ENGINE=InnoDB AUTO_INCREMENT=112 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
+DROP TABLE IF EXISTS `password_resets`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!40101 SET character_set_client = utf8 */;
+CREATE TABLE `password_resets` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `email` varchar(100) NOT NULL,
+  `role_table` varchar(50) NOT NULL,
+  `token` varchar(64) NOT NULL,
+  `expires_at` datetime NOT NULL,
+  `used` tinyint(1) NOT NULL DEFAULT 0,
+  `created_at` timestamp NOT NULL DEFAULT current_timestamp(),
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `token` (`token`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 DROP TABLE IF EXISTS `vacancies`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;

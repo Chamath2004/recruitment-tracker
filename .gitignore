@@ -1,5 +1,6 @@
 .claude/settings.local.json
 google_config.php
 db.php
+email_config.php
 uploads/resumes/*
 !uploads/resumes/.gitkeep

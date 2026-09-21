@@ -455,7 +455,7 @@ function renderApplicationStep() {
 
       <div class="form-actions">
         <button class="cancel-btn" onclick="goToStep(3)">Back</button>
-        <button class="submit-btn" onclick="submitApplication()">
+        <button class="submit-btn" id="submit-application-btn" onclick="submitApplication()">
           <i data-lucide="check-circle"></i> Submit Application
         </button>
       </div>
@@ -575,6 +575,14 @@ collapseBtn.addEventListener('click', () => {
 });
 
 function submitApplication() {
+  const btn = document.getElementById('submit-application-btn');
+  if (btn) {
+    if (btn.disabled) return;
+    btn.disabled = true;
+    btn.innerHTML = `<i data-lucide="loader-2" class="spin-icon"></i> Submitting...`;
+    lucide.createIcons();
+  }
+
   const submissionData = new FormData();
   submissionData.append('jobTitle', activeJob.title);
   submissionData.append('fullName', formData.fullName);
@@ -609,11 +617,21 @@ function submitApplication() {
         refreshNotifBadge();
       } else {
         alert("Error saving application: " + data.message);
+        if (btn) {
+          btn.disabled = false;
+          btn.innerHTML = `<i data-lucide="check-circle"></i> Submit Application`;
+          lucide.createIcons();
+        }
       }
     })
     .catch(error => {
       console.error('Error:', error);
       alert("An error occurred while connecting to the server.");
+      if (btn) {
+        btn.disabled = false;
+        btn.innerHTML = `<i data-lucide="check-circle"></i> Submit Application`;
+        lucide.createIcons();
+      }
     });
 }
 
@@ -1263,6 +1281,9 @@ function renderApplicationsList() {
         }
       } else if (iv.mode === 'onsite' && iv.meeting_link) {
         linkHtml = `<p class="interview-info-detail">${iv.meeting_link}</p>`;
+        if (iv.visitor_id) {
+          linkHtml += `<p class="visitor-id-badge">Visitor ID: <strong>${iv.visitor_id}</strong> — please show this at reception</p>`;
+        }
       } else if (iv.mode === 'video' && iv.meeting_link && !isUrl) {
         linkHtml = `<p class="interview-info-detail">${iv.meeting_link}</p>`;
       }

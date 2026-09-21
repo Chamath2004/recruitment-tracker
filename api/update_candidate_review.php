@@ -10,6 +10,7 @@ if (empty($_SESSION['hr_admin_id'])) {
 }
 
 require_once __DIR__ . '/db.php';
+require_once __DIR__ . '/email_helper.php';
 
 if ($conn->connect_error) {
     echo json_encode(["success" => false, "message" => "Database connection failed"]);
@@ -29,7 +30,7 @@ if ($applicationId <= 0 || !in_array($action, $validActions, true)) {
     exit();
 }
 
-$appStmt = $conn->prepare("SELECT candidate_id, job_title FROM applications WHERE id = ?");
+$appStmt = $conn->prepare("SELECT candidate_id, job_title, full_name, email FROM applications WHERE id = ?");
 $appStmt->bind_param("i", $applicationId);
 $appStmt->execute();
 $appResult = $appStmt->get_result();
@@ -67,6 +68,8 @@ if ($action === 'shortlist') {
         $notifStmt->bind_param("is", $candidateId, $message);
         $notifStmt->execute();
         $notifStmt->close();
+
+        sendCandidateEmail($app['email'], $app['full_name'], "Application Update - {$app['job_title']}", "<p>$message</p>");
     }
 }
 

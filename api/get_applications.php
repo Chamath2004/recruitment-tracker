@@ -32,7 +32,7 @@ if ($result->num_rows > 0) {
 $stmt->close();
 
 $interviewsByApplication = [];
-$interviewStmt = $conn->prepare("SELECT id, application_id, interview_type, interview_date, interview_time, duration_minutes, interviewer, mode, meeting_link, status, confirmation_status, candidate_suggested_date, candidate_suggested_time, candidate_note FROM interviews WHERE candidate_id = ? AND status != 'cancelled' ORDER BY interview_date ASC, interview_time ASC");
+$interviewStmt = $conn->prepare("SELECT id, application_id, interview_type, interview_date, interview_time, duration_minutes, interviewer, mode, meeting_link, visitor_id, status, confirmation_status, candidate_suggested_date, candidate_suggested_time, candidate_note FROM interviews WHERE candidate_id = ? AND status != 'cancelled' ORDER BY interview_date ASC, interview_time ASC");
 $interviewStmt->bind_param("i", $candidateId);
 $interviewStmt->execute();
 $interviewResult = $interviewStmt->get_result();
