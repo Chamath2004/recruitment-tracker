@@ -1,0 +1,367 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Altrium - Careers</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <script src="https://unpkg.com/lucide@latest"></script>
+  <script>
+    document.documentElement.setAttribute('data-theme', localStorage.getItem('theme') || 'dark');
+  </script>
+  <style>
+    :root {
+      --bg-page: #0a0d0a;
+      --bg-card: rgba(255, 255, 255, 0.06);
+      --bg-card-hover: rgba(255, 255, 255, 0.09);
+      --border-color: rgba(255, 255, 255, 0.14);
+      --text-main: #f5f3ea;
+      --text-muted: #9a9a8a;
+      --text-body: #d8d6c9;
+      --text-dim: #6f6f62;
+      --accent: #f0c419;
+      --accent-hover: #d6ac00;
+      --accent-text: #0b0f0a;
+      --pill-bg: rgba(240, 196, 25, 0.12);
+    }
+    [data-theme="light"] {
+      --bg-page: #F9F9F9;
+      --bg-card: #ffffff;
+      --bg-card-hover: #fafafa;
+      --border-color: #e2e8f0;
+      --text-main: #0f172a;
+      --text-muted: #4b5563;
+      --text-body: #374151;
+      --text-dim: #9ca3af;
+      --accent: #2563eb;
+      --accent-hover: #1d4ed8;
+      --accent-text: #ffffff;
+      --pill-bg: rgba(37, 99, 235, 0.08);
+    }
+    * { box-sizing: border-box; font-family: 'Inter', sans-serif; }
+    html { scroll-behavior: smooth; }
+    html, body { max-width: 100%; overflow-x: hidden; }
+    body {
+      margin: 0;
+      padding-top: 68px;
+      background: var(--bg-page);
+      color: var(--text-main);
+      transition: background-color 0.2s ease;
+    }
+
+    /* ---------- Nav ---------- */
+    .site-nav {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      z-index: 100;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 16px 40px;
+      background: rgba(10, 13, 10, 0.75);
+      backdrop-filter: blur(14px) saturate(150%);
+      -webkit-backdrop-filter: blur(14px) saturate(150%);
+      border-bottom: 1px solid var(--border-color);
+    }
+    [data-theme="light"] .site-nav { background: rgba(249, 249, 249, 0.85); }
+    .nav-logo-img { height: 28px; display: block; }
+    .nav-logo-img.for-light { display: none; }
+    [data-theme="light"] .nav-logo-img.for-dark { display: none; }
+    [data-theme="light"] .nav-logo-img.for-light { display: block; }
+    .nav-links {
+      display: flex;
+      align-items: center;
+      gap: 28px;
+    }
+    .nav-links a {
+      color: var(--text-body);
+      text-decoration: none;
+      font-size: 14px;
+      font-weight: 500;
+    }
+    .nav-links a:hover { color: var(--accent); }
+    .nav-actions { display: flex; align-items: center; gap: 12px; }
+    .theme-toggle-btn {
+      width: 36px; height: 36px; border-radius: 50%;
+      background: var(--bg-card); border: 1px solid var(--border-color);
+      color: var(--text-main); display: flex; align-items: center; justify-content: center;
+      cursor: pointer;
+    }
+    .theme-toggle-btn svg { width: 16px; height: 16px; }
+    .btn {
+      display: inline-flex; align-items: center; gap: 6px;
+      padding: 9px 18px; border-radius: 8px; font-size: 14px; font-weight: 600;
+      text-decoration: none; cursor: pointer; border: 1px solid transparent;
+      transition: background-color 0.15s ease, border-color 0.15s ease;
+    }
+    .btn-primary { background: var(--accent); color: var(--accent-text); }
+    .btn-primary:hover { background: var(--accent-hover); }
+    .btn-ghost { background: transparent; color: var(--text-main); border-color: var(--border-color); }
+    .btn-ghost:hover { background: var(--bg-card); }
+    @media (max-width: 720px) {
+      .nav-links { display: none; }
+      .site-nav { padding: 14px 20px; }
+    }
+    @media (max-width: 600px) {
+      .nav-actions { gap: 8px; }
+      .theme-toggle-btn { display: none; }
+      .nav-actions .btn { padding: 8px 12px; font-size: 13px; }
+      .nav-actions .btn-ghost span,
+      .nav-actions .btn-ghost { padding: 8px 10px; }
+      .hero { padding: 60px 20px 60px; }
+      section { padding: 56px 20px; }
+      .cta-banner { padding: 40px 20px; }
+      .job-card { padding: 18px; }
+    }
+
+    /* ---------- Hero ---------- */
+    .hero {
+      position: relative;
+      padding: 100px 40px 90px;
+      text-align: center;
+      background-color: var(--bg-page);
+      background-image:
+        radial-gradient(ellipse 900px 480px at 50% -12%, rgba(240, 196, 25, 0.28), transparent 70%),
+        linear-gradient(rgba(6, 8, 6, 0.72), rgba(6, 8, 6, 0.72)),
+        url("../images/hr-vision-bg.jpeg");
+      background-size: cover;
+      background-position: center;
+      border-bottom: 1px solid var(--border-color);
+    }
+    [data-theme="light"] .hero {
+      background-image: radial-gradient(ellipse 900px 480px at 50% -12%, rgba(240, 196, 25, 0.18), transparent 70%);
+    }
+    .hero-eyebrow {
+      display: inline-block; font-size: 12px; font-weight: 700; letter-spacing: 0.08em;
+      text-transform: uppercase; color: var(--accent); background: var(--pill-bg);
+      padding: 6px 14px; border-radius: 999px; margin-bottom: 20px;
+    }
+    .hero h1 {
+      font-size: clamp(32px, 5vw, 52px); font-weight: 800; line-height: 1.1; margin: 0 0 18px;
+      color: var(--text-main);
+    }
+    .hero p {
+      max-width: 640px; margin: 0 auto 32px; font-size: 17px; line-height: 1.6;
+      color: var(--text-body);
+    }
+    .hero-actions { display: flex; gap: 14px; justify-content: center; flex-wrap: wrap; }
+    .hero-stats {
+      display: flex; gap: 48px; justify-content: center; margin-top: 56px; flex-wrap: wrap;
+    }
+    .hero-stat-num { font-size: 30px; font-weight: 800; color: var(--accent); }
+    .hero-stat-label { font-size: 13px; color: var(--text-muted); margin-top: 2px; }
+
+    /* ---------- Sections ---------- */
+    section { padding: 80px 40px; max-width: 1120px; margin: 0 auto; }
+    .section-head { text-align: center; max-width: 620px; margin: 0 auto 48px; }
+    .section-eyebrow {
+      font-size: 12px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase;
+      color: var(--accent); margin-bottom: 10px;
+    }
+    .section-head h2 { font-size: 30px; font-weight: 800; margin: 0 0 12px; }
+    .section-head p { color: var(--text-muted); font-size: 15px; line-height: 1.6; margin: 0; }
+
+    /* ---------- Why cards ---------- */
+    .why-grid {
+      display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 20px;
+    }
+    .why-card {
+      background: var(--bg-card); border: 1px solid var(--border-color); border-radius: 14px;
+      padding: 26px; text-align: left;
+    }
+    .why-icon {
+      width: 42px; height: 42px; border-radius: 10px; background: var(--pill-bg);
+      display: flex; align-items: center; justify-content: center; margin-bottom: 16px;
+    }
+    .why-icon svg { width: 20px; height: 20px; color: var(--accent); }
+    .why-card h3 { font-size: 16px; margin: 0 0 8px; }
+    .why-card p { font-size: 13.5px; color: var(--text-muted); line-height: 1.6; margin: 0; }
+
+    /* ---------- Jobs ---------- */
+    #jobs-list { display: flex; flex-direction: column; gap: 14px; }
+    .job-card {
+      background: var(--bg-card); border: 1px solid var(--border-color); border-radius: 14px;
+      padding: 22px 26px; display: flex; align-items: center; justify-content: space-between;
+      gap: 20px; flex-wrap: wrap; transition: background-color 0.15s ease;
+    }
+    .job-card:hover { background: var(--bg-card-hover); }
+    .job-main h3 { margin: 0 0 8px; font-size: 17px; }
+    .job-tags { display: flex; gap: 8px; flex-wrap: wrap; }
+    .job-tag {
+      font-size: 12px; font-weight: 600; padding: 4px 10px; border-radius: 999px;
+      background: var(--pill-bg); color: var(--accent);
+    }
+    .job-tag.muted { background: rgba(255,255,255,0.06); color: var(--text-muted); }
+    [data-theme="light"] .job-tag.muted { background: #f1f5f9; }
+    .job-state { font-size: 12px; color: var(--text-dim); }
+    .jobs-empty, .jobs-loading {
+      text-align: center; padding: 40px; color: var(--text-muted); font-size: 14px;
+    }
+
+    /* ---------- Steps ---------- */
+    .steps { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 24px; counter-reset: step; }
+    .step { text-align: left; }
+    .step-num {
+      width: 34px; height: 34px; border-radius: 50%; background: var(--accent); color: var(--accent-text);
+      display: flex; align-items: center; justify-content: center; font-weight: 800; font-size: 14px; margin-bottom: 14px;
+    }
+    .step h3 { font-size: 15px; margin: 0 0 6px; }
+    .step p { font-size: 13.5px; color: var(--text-muted); line-height: 1.6; margin: 0; }
+
+    /* ---------- CTA banner ---------- */
+    .cta-banner {
+      background: var(--bg-card); border: 1px solid var(--border-color); border-radius: 18px;
+      padding: 56px 40px; text-align: center;
+    }
+    .cta-banner h2 { font-size: 26px; margin: 0 0 12px; }
+    .cta-banner p { color: var(--text-muted); margin: 0 0 26px; font-size: 15px; }
+
+    /* ---------- Footer ---------- */
+    footer {
+      border-top: 1px solid var(--border-color); padding: 32px 40px; text-align: center;
+      color: var(--text-dim); font-size: 13px;
+    }
+    footer a { color: var(--text-muted); text-decoration: none; margin: 0 8px; }
+    footer a:hover { color: var(--accent); }
+  </style>
+</head>
+<body>
+
+  <nav class="site-nav">
+    <a href="Home.html" style="display:flex; align-items:center;">
+      <img src="../images/Altrium-logo-1.png" alt="Altrium" class="nav-logo-img for-light">
+      <img src="../images/Altrium-logo-white.png" alt="Altrium" class="nav-logo-img for-dark">
+    </a>
+    <div class="nav-links">
+      <a href="#jobs">Open Positions</a>
+      <a href="#why">Why Altrium</a>
+      <a href="#how">How It Works</a>
+    </div>
+    <div class="nav-actions">
+      <button class="theme-toggle-btn" onclick="toggleTheme()" title="Toggle theme">
+        <i id="theme-toggle-icon" data-lucide="sun"></i>
+      </button>
+      <a class="btn btn-ghost" href="Login.html">Log In</a>
+      <a class="btn btn-primary" href="Candidate_register.html">Create Account</a>
+    </div>
+  </nav>
+
+  <header class="hero">
+    <span class="hero-eyebrow">We're hiring</span>
+    <h1>Find your next role<br>with Altrium.</h1>
+    <p>Browse open positions, apply in minutes, and track every step of your application — interview scheduling, feedback, and offers — from one place.</p>
+    <div class="hero-actions">
+      <a class="btn btn-primary" href="#jobs"><i data-lucide="search"></i> Browse Open Positions</a>
+      <a class="btn btn-ghost" href="Candidate_register.html"><i data-lucide="user-plus"></i> Create your account</a>
+    </div>
+    <div class="hero-stats">
+      <div>
+        <div class="hero-stat-num" id="stat-open-roles">—</div>
+        <div class="hero-stat-label">Open roles</div>
+      </div>
+      <div>
+        <div class="hero-stat-num" id="stat-departments">—</div>
+        <div class="hero-stat-label">Departments hiring</div>
+      </div>
+      <div>
+        <div class="hero-stat-num">100%</div>
+        <div class="hero-stat-label">Application status visibility</div>
+      </div>
+    </div>
+  </header>
+
+  <section id="jobs">
+    <div class="section-head">
+      <div class="section-eyebrow">Open Positions</div>
+      <h2>Roles hiring right now</h2>
+      <p>Every listing below is live in our system. Create an account to apply — we'll keep you updated by email at every stage.</p>
+    </div>
+    <div id="jobs-list">
+      <div class="jobs-loading">Loading open positions…</div>
+    </div>
+  </section>
+
+  <section id="why">
+    <div class="section-head">
+      <div class="section-eyebrow">Why Altrium</div>
+      <h2>Built to keep candidates in the loop</h2>
+      <p>No more wondering where your application stands.</p>
+    </div>
+    <div class="why-grid">
+      <div class="why-card">
+        <div class="why-icon"><i data-lucide="mail-check"></i></div>
+        <h3>Automatic email updates</h3>
+        <p>The moment your status changes — reviewed, interview scheduled, offer — you get an email. No need to chase anyone.</p>
+      </div>
+      <div class="why-card">
+        <div class="why-icon"><i data-lucide="calendar-clock"></i></div>
+        <h3>Clear interview scheduling</h3>
+        <p>See your interview time, format, and location in one place, with a Google Meet link or office address auto-included.</p>
+      </div>
+      <div class="why-card">
+        <div class="why-icon"><i data-lucide="layout-dashboard"></i></div>
+        <h3>A real dashboard</h3>
+        <p>Track every application you've submitted and its current stage, instead of guessing from an inbox.</p>
+      </div>
+      <div class="why-card">
+        <div class="why-icon"><i data-lucide="shield-check"></i></div>
+        <h3>Your data, protected</h3>
+        <p>Secure login, password recovery, and a process built around keeping your information accurate and private.</p>
+      </div>
+    </div>
+  </section>
+
+  <section id="how">
+    <div class="section-head">
+      <div class="section-eyebrow">How It Works</div>
+      <h2>From application to offer</h2>
+    </div>
+    <div class="steps">
+      <div class="step">
+        <div class="step-num">1</div>
+        <h3>Create your account</h3>
+        <p>Sign up once, then apply to as many open roles as you like with your saved profile and resume.</p>
+      </div>
+      <div class="step">
+        <div class="step-num">2</div>
+        <h3>Apply in minutes</h3>
+        <p>Fill in your details, attach a resume, and add a short cover letter — no lengthy forms.</p>
+      </div>
+      <div class="step">
+        <div class="step-num">3</div>
+        <h3>Track your status</h3>
+        <p>Watch your application move through review, interview, and decision stages from your dashboard.</p>
+      </div>
+      <div class="step">
+        <div class="step-num">4</div>
+        <h3>Interview &amp; offer</h3>
+        <p>Get your interview details by email, confirm or request a new time, and hear back with a clear decision.</p>
+      </div>
+    </div>
+  </section>
+
+  <section>
+    <div class="cta-banner">
+      <h2>Ready to find your next role?</h2>
+      <p>Create a free account and start applying today.</p>
+      <a class="btn btn-primary" href="Candidate_register.html"><i data-lucide="arrow-right"></i> Get Started</a>
+    </div>
+  </section>
+
+  <footer>
+    <div>&copy; 2026 Altrium Inc. All rights reserved.</div>
+    <div style="margin-top:8px;">
+      <a href="Home.html">Home</a>·
+      <a href="Login.html">Log In</a>·
+      <a href="Candidate_register.html">Create Account</a>
+    </div>
+  </footer>
+
+  <script src="../assets/js/theme.js"></script>
+  <script src="../assets/js/home.js"></script>
+</body>
+</html>
