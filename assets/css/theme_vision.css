@@ -4,6 +4,13 @@
    :not([data-theme="light"]) everywhere so the existing light-mode toggle
    keeps working unchanged. */
 
+/* Tells the browser to render native form UI (select dropdown popups,
+   scrollbars, etc.) using its dark palette, so <optgroup> labels don't
+   render as light bars inside an otherwise dark dropdown. */
+html:not([data-theme="light"]) {
+  color-scheme: dark;
+}
+
 :root:not([data-theme="light"]) {
   --bg-sidebar: #0a0d0a;
   --bg-sidebar-hover: rgba(240, 196, 25, 0.08);

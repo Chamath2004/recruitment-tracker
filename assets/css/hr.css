@@ -1320,12 +1320,21 @@
   cursor: pointer;
 }
 
-/* Browsers render the native <option> popup with their own default
-   background, ignoring the <select>'s own background — style options
-   explicitly so text stays legible against it in both themes. */
-.modal-body select option {
+/* Browsers render the native <option>/<optgroup> popup with their own
+   default background, ignoring the <select>'s own background — style
+   both explicitly so text stays legible against it in both themes.
+   <optgroup> labels in particular default to a light bar even inside
+   an otherwise dark dropdown if left unstyled. */
+.modal-body select option,
+.modal-body select optgroup {
   background-color: var(--bg-sidebar);
   color: var(--text-main);
+}
+
+.modal-body select optgroup {
+  font-style: normal;
+  font-weight: 700;
+  color: var(--primary-green);
 }
 
 .modal-footer {
