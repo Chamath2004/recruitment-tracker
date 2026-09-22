@@ -10,6 +10,7 @@ if (empty($_SESSION['hr_admin_id'])) {
 
 require_once __DIR__ . '/db.php';
 require_once __DIR__ . '/email_helper.php';
+require_once __DIR__ . '/app_settings_helper.php';
 
 if ($conn->connect_error) {
     echo json_encode(["success" => false, "message" => "Database connection failed"]);
@@ -110,7 +111,9 @@ $notifStmt->bind_param("is", $candidateId, $message);
 $notifStmt->execute();
 $notifStmt->close();
 
-sendCandidateEmail($app['email'], $candidateName, "Interview Scheduled - $jobTitle", "<p>$message</p>");
+if (getAppSetting($conn, 'auto_email')) {
+    sendCandidateEmail($app['email'], $candidateName, "Interview Scheduled - $jobTitle", "<p>$message</p>");
+}
 
 echo json_encode(["success" => true, "id" => $id]);
 

@@ -167,6 +167,8 @@ CREATE TABLE `interviews` (
   `candidate_suggested_date` date DEFAULT NULL,
   `candidate_suggested_time` time DEFAULT NULL,
   `candidate_note` text DEFAULT NULL,
+  `reminder_24h_sent` tinyint(1) NOT NULL DEFAULT 0,
+  `reminder_1h_sent` tinyint(1) NOT NULL DEFAULT 0,
   `created_at` timestamp NOT NULL DEFAULT current_timestamp(),
   `updated_at` timestamp NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp(),
   PRIMARY KEY (`id`),
@@ -202,6 +204,19 @@ CREATE TABLE `password_resets` (
   PRIMARY KEY (`id`),
   UNIQUE KEY `token` (`token`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
+DROP TABLE IF EXISTS `app_settings`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+CREATE TABLE `app_settings` (
+  `setting_key` varchar(50) NOT NULL,
+  `setting_value` varchar(10) NOT NULL DEFAULT '1',
+  PRIMARY KEY (`setting_key`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+INSERT INTO `app_settings` (`setting_key`, `setting_value`) VALUES
+  ('auto_email', '1'),
+  ('meet_links', '1'),
+  ('reminders', '1');
 /*!40101 SET character_set_client = @saved_cs_client */;
 DROP TABLE IF EXISTS `vacancies`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;

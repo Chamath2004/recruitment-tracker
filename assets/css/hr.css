@@ -1013,6 +1013,10 @@
   justify-content: space-between;
   gap: 16px;
   margin-bottom: 24px;
+  /* Its action button (New Vacancy / Auto Filter CVs / Schedule Interview)
+     sits in the same top-right corner as the fixed theme-toggle button —
+     push it down a bit further so the two never overlap. */
+  margin-top: 16px;
 }
 
 .new-vacancy-btn {

@@ -10,6 +10,7 @@ if (empty($_SESSION['hr_admin_id'])) {
 
 require_once __DIR__ . '/db.php';
 require_once __DIR__ . '/email_helper.php';
+require_once __DIR__ . '/app_settings_helper.php';
 
 if ($conn->connect_error) {
     echo json_encode(["success" => false, "message" => "Database connection failed"]);
@@ -57,7 +58,9 @@ if ($status === 'cancelled') {
     $notifStmt->execute();
     $notifStmt->close();
 
-    sendCandidateEmail($interview['email'], $interview['full_name'], "Interview Cancelled - {$interview['job_title']}", "<p>$message</p>");
+    if (getAppSetting($conn, 'auto_email')) {
+        sendCandidateEmail($interview['email'], $interview['full_name'], "Interview Cancelled - {$interview['job_title']}", "<p>$message</p>");
+    }
 }
 
 echo json_encode(["success" => true]);

@@ -69,5 +69,7 @@ test('HR schedules an interview and the department-matched interviewer is auto-s
 
   await page.locator('#interview-modal-overlay').getByRole('button', { name: 'Schedule Interview' }).click();
 
-  await expect(page.locator('#interview-modal-overlay')).toHaveCount(0);
+  // save_interview.php sends a real "Interview Scheduled" email before
+  // responding — always allow real SMTP latency here.
+  await expect(page.locator('#interview-modal-overlay')).toHaveCount(0, { timeout: 15000 });
 });

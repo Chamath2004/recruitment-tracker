@@ -11,6 +11,7 @@ if (empty($_SESSION['hr_admin_id'])) {
 
 require_once __DIR__ . '/db.php';
 require_once __DIR__ . '/email_helper.php';
+require_once __DIR__ . '/app_settings_helper.php';
 
 if ($conn->connect_error) {
     echo json_encode(["success" => false, "message" => "Database connection failed"]);
@@ -69,7 +70,9 @@ if ($action === 'shortlist') {
         $notifStmt->execute();
         $notifStmt->close();
 
-        sendCandidateEmail($app['email'], $app['full_name'], "Application Update - {$app['job_title']}", "<p>$message</p>");
+        if (getAppSetting($conn, 'auto_email')) {
+            sendCandidateEmail($app['email'], $app['full_name'], "Application Update - {$app['job_title']}", "<p>$message</p>");
+        }
     }
 }
 

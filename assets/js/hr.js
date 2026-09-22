@@ -208,6 +208,7 @@ function loadHrDashboardStats() {
 }
 
 loadHrDashboardStats();
+loadAutomationSettings();
 
 // ================= VACANCY MANAGEMENT =================
 
@@ -553,7 +554,6 @@ function runReviewCandidate(applicationId, action) {
 // ================= HIRING WORKFLOWS =================
 
 const DEFAULT_STAGES_KEY = 'hr_default_pipeline_stages';
-const AUTOMATION_SETTINGS_KEY = 'hr_automation_settings';
 
 const fallbackDefaultStages = ['Applied', 'Screening', 'Technical Interview', 'Culture Fit', 'Final Offer'];
 
@@ -575,16 +575,23 @@ function saveDefaultStages(stages) {
   localStorage.setItem(DEFAULT_STAGES_KEY, JSON.stringify(stages));
 }
 
-function getAutomationSettings() {
-  try {
-    const stored = JSON.parse(localStorage.getItem(AUTOMATION_SETTINGS_KEY));
-    if (stored && typeof stored === 'object') return stored;
-  } catch (e) { /* fall through to default */ }
-  return { autoEmail: true, meetLinks: true, reminders: true };
-}
+// These settings actually gate real backend/frontend behavior (see
+// api/app_settings_helper.php and autoFillMeetingLink below), so they
+// live server-side in the app_settings table, not localStorage — every
+// HR admin needs to see and be affected by the same shared toggle.
+let cachedAutomationSettings = { autoEmail: true, meetLinks: true, reminders: true };
 
-function saveAutomationSettings(settings) {
-  localStorage.setItem(AUTOMATION_SETTINGS_KEY, JSON.stringify(settings));
+function loadAutomationSettings() {
+  return fetch('../api/get_automation_settings.php')
+    .then(response => response.json())
+    .then(result => {
+      if (result.success) cachedAutomationSettings = result.data;
+      renderAutomationList();
+    })
+    .catch(error => {
+      console.error('Error loading automation settings:', error);
+      renderAutomationList();
+    });
 }
 
 function inferStageType(name) {
@@ -599,7 +606,7 @@ function inferStageType(name) {
 
 function loadHiringWorkflows() {
   renderStageList();
-  renderAutomationList();
+  loadAutomationSettings();
   loadVacancies();
 }
 
@@ -695,8 +702,8 @@ function moveStage(index, direction) {
 }
 
 function renderAutomationList() {
-  const settings = getAutomationSettings();
   const container = document.getElementById('automation-list');
+  if (!container) return;
 
   container.innerHTML = automationSettingsConfig.map(item => `
     <div class="automation-row">
@@ -704,7 +711,7 @@ function renderAutomationList() {
         <p class="automation-title">${item.title}</p>
         <p class="automation-desc">${item.desc}</p>
       </div>
-      <button class="toggle-switch ${settings[item.key] ? 'on' : ''}" onclick="toggleAutomationSetting('${item.key}')">
+      <button class="toggle-switch ${cachedAutomationSettings[item.key] ? 'on' : ''}" onclick="toggleAutomationSetting('${item.key}')">
         <span class="toggle-knob"></span>
       </button>
     </div>
@@ -712,10 +719,27 @@ function renderAutomationList() {
 }
 
 function toggleAutomationSetting(key) {
-  const settings = getAutomationSettings();
-  settings[key] = !settings[key];
-  saveAutomationSettings(settings);
+  cachedAutomationSettings[key] = !cachedAutomationSettings[key];
   renderAutomationList();
+
+  fetch('../api/save_automation_settings.php', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ key, value: cachedAutomationSettings[key] })
+  })
+    .then(response => response.json())
+    .then(result => {
+      if (!result.success) {
+        alert(result.message || 'Failed to save this setting.');
+        cachedAutomationSettings[key] = !cachedAutomationSettings[key];
+        renderAutomationList();
+      }
+    })
+    .catch(error => {
+      console.error('Error saving automation setting:', error);
+      cachedAutomationSettings[key] = !cachedAutomationSettings[key];
+      renderAutomationList();
+    });
 }
 
 function renderVacancyWorkflowsList() {
@@ -1149,7 +1173,7 @@ function autoFillMeetingLink(force) {
   const linkEl = document.getElementById('if-link');
   if (!modeEl || !linkEl) return;
 
-  if (!force && (modeEl.value !== 'video' || linkEl.dataset.auto === 'false')) return;
+  if (!force && (modeEl.value !== 'video' || linkEl.dataset.auto === 'false' || !cachedAutomationSettings.meetLinks)) return;
 
   const dateEl = document.getElementById('if-date');
   const timeEl = document.getElementById('if-time');

@@ -17,6 +17,7 @@ if ($conn->connect_error) {
 
 require_once __DIR__ . '/interview_helpers.php';
 autoCompletePastInterviews($conn);
+sendDueInterviewReminders($conn);
 
 // Total applications
 $totalApplications = 0;

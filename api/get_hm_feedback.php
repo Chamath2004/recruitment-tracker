@@ -17,6 +17,7 @@ if ($conn->connect_error) {
 
 require_once __DIR__ . '/interview_helpers.php';
 autoCompletePastInterviews($conn);
+sendDueInterviewReminders($conn);
 
 $sql = "SELECT
             i.id, i.application_id, i.candidate_name, i.job_title, i.interview_type, i.interview_date, i.interview_time,

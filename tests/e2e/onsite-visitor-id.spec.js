@@ -63,7 +63,9 @@ test('scheduling an onsite interview auto-fills the office address and shows a V
   await expect(page.locator('#if-link')).toHaveValue(/Onyx Tower/);
 
   await page.locator('#interview-modal-overlay').getByRole('button', { name: 'Schedule Interview' }).click();
-  await expect(page.locator('#interview-modal-overlay')).toHaveCount(0);
+  // save_interview.php sends a real "Interview Scheduled" email before
+  // responding — always allow real SMTP latency here.
+  await expect(page.locator('#interview-modal-overlay')).toHaveCount(0, { timeout: 15000 });
 
   const row = page.locator('#interviews-table-body tr', { hasText: 'QA E2EOnsiteCandidate' });
   await expect(row).toContainText('Visitor ID:');

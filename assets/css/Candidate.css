@@ -352,7 +352,9 @@ body {
 /* ================= MAIN CONTENT ================= */
 .main-content {
   flex: 1;
-  padding: 40px;
+  /* Extra top clearance so page content never sits under the fixed
+     theme-toggle button (top:20px; right:20px; 40px diameter). */
+  padding: 56px 40px 40px;
 }
 
 .header h1 {

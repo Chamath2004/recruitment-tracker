@@ -39,7 +39,9 @@ test('candidate can apply for a job, and a second attempt is blocked as a duplic
   await page.getByRole('button', { name: 'Continue' }).click();
 
   await page.getByRole('button', { name: 'Submit Application' }).click();
-  await expect(page.getByText('Application Submitted!')).toBeVisible();
+  // submit_application.php sends a real email before responding — always
+  // allow real SMTP latency here, not just the default 5s.
+  await expect(page.getByText('Application Submitted!')).toBeVisible({ timeout: 15000 });
 
   await page.getByRole('button', { name: 'Back to Job Board' }).click();
   await page.reload();

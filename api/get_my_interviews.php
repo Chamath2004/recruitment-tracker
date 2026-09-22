@@ -17,6 +17,7 @@ if ($conn->connect_error) {
 
 require_once __DIR__ . '/interview_helpers.php';
 autoCompletePastInterviews($conn);
+sendDueInterviewReminders($conn);
 
 $interviewerId = (int) $_SESSION['interviewer_id'];
 
