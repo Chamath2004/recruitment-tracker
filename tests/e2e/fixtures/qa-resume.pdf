@@ -1,0 +1,4 @@
+%PDF-1.4
+This is a placeholder file used only by the E2E test suite to satisfy the
+resume-upload step. Its content is never parsed in this test path.
+%%EOF
