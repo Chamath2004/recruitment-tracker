@@ -4,3 +4,7 @@ db.php
 email_config.php
 uploads/resumes/*
 !uploads/resumes/.gitkeep
+
+node_modules/
+playwright-report/
+test-results/

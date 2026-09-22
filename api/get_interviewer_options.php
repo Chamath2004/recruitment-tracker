@@ -16,11 +16,12 @@ if ($conn->connect_error) {
 }
 
 $options = [];
-$result = $conn->query("SELECT id, first_name, last_name FROM interviewers ORDER BY first_name, last_name");
+$result = $conn->query("SELECT id, first_name, last_name, department FROM interviewers ORDER BY first_name, last_name");
 while ($row = $result->fetch_assoc()) {
     $options[] = [
         "id" => (int) $row['id'],
-        "name" => trim($row['first_name'] . ' ' . $row['last_name'])
+        "name" => trim($row['first_name'] . ' ' . $row['last_name']),
+        "department" => $row['department']
     ];
 }
 

@@ -19,7 +19,12 @@ require_once __DIR__ . '/interview_helpers.php';
 autoCompletePastInterviews($conn);
 
 $interviews = [];
-$result = $conn->query("SELECT * FROM interviews ORDER BY interview_date ASC, interview_time ASC");
+$result = $conn->query("
+    SELECT i.*, v.department
+    FROM interviews i
+    LEFT JOIN vacancies v ON v.title = i.job_title
+    ORDER BY i.interview_date ASC, i.interview_time ASC
+");
 if ($result) {
     while ($row = $result->fetch_assoc()) {
         $row['id'] = (int) $row['id'];

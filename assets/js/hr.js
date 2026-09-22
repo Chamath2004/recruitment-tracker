@@ -985,6 +985,43 @@ function updateInterviewTimeMin() {
   }
 }
 
+function renderInterviewerOptionsHtml(department, selectedId, autoSelect) {
+  const dept = (department || '').trim();
+  const matching = dept ? interviewerOptionsList.filter(iv => (iv.department || '').trim().toLowerCase() === dept.toLowerCase()) : [];
+  const others = dept ? interviewerOptionsList.filter(iv => (iv.department || '').trim().toLowerCase() !== dept.toLowerCase()) : interviewerOptionsList;
+
+  let effectiveId = selectedId;
+  if (autoSelect && !effectiveId && matching.length) {
+    effectiveId = matching[0].id;
+  }
+
+  const opt = (iv) => `<option value="${iv.id}" ${effectiveId === iv.id ? 'selected' : ''}>${iv.name}</option>`;
+
+  if (!dept) {
+    return `<option value="">Select an interviewer...</option>${others.map(opt).join('')}`;
+  }
+
+  let html = `<option value="">Select an interviewer...</option>`;
+  if (matching.length) {
+    html += `<optgroup label="Recommended — ${dept}">${matching.map(opt).join('')}</optgroup>`;
+  }
+  if (others.length) {
+    html += `<optgroup label="${matching.length ? 'Other Departments' : 'All Interviewers'}">${others.map(opt).join('')}</optgroup>`;
+  }
+  return html;
+}
+
+function updateInterviewerSuggestions() {
+  const select = document.getElementById('if-interviewer');
+  const appSelect = document.getElementById('if-application');
+  if (!select || !appSelect) return;
+
+  const isAuto = select.dataset.auto !== 'false';
+  const currentId = isAuto ? null : (parseInt(select.value, 10) || null);
+  const app = applicationPickerList.find(a => a.id === parseInt(appSelect.value, 10));
+  select.innerHTML = renderInterviewerOptionsHtml(app ? app.department : '', currentId, isAuto);
+}
+
 function openInterviewModal(id) {
   const interview = id ? interviewList.find(iv => iv.id === id) : null;
 
@@ -996,7 +1033,7 @@ function openInterviewModal(id) {
   ` : `
     <div class="form-group">
       <label>Candidate *</label>
-      <select id="if-application" onchange="autoFillMeetingLink()">
+      <select id="if-application" onchange="autoFillMeetingLink(); updateInterviewerSuggestions();">
         <option value="">Select an application...</option>
         ${applicationPickerList.map(app => `
           <option value="${app.id}">${app.full_name || app.email} — ${app.job_title}</option>
@@ -1053,13 +1090,10 @@ function openInterviewModal(id) {
           </div>
           <div class="form-group">
             <label>Interviewer *</label>
-            <select id="if-interviewer">
-              <option value="">Select an interviewer...</option>
-              ${interviewerOptionsList.map(iv => `
-                <option value="${iv.id}" ${interview && interview.interviewer_id === iv.id ? 'selected' : ''}>${iv.name}</option>
-              `).join('')}
+            <select id="if-interviewer" data-auto="${interview ? 'false' : 'true'}" onchange="this.dataset.auto='false'">
+              ${renderInterviewerOptionsHtml(interview ? interview.department : '', interview ? interview.interviewer_id : null, !interview)}
             </select>
-            <p class="workflow-card-hint" style="margin-top: 6px;">The assigned interviewer submits feedback from their own portal.</p>
+            <p class="workflow-card-hint" style="margin-top: 6px;">The interviewer from the vacancy's department is picked automatically — change it if you'd like someone else.</p>
           </div>
           <div class="form-group">
             <label>Meeting Link / Location</label>

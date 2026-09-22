@@ -16,7 +16,13 @@ if ($conn->connect_error) {
 }
 
 $applications = [];
-$result = $conn->query("SELECT id, candidate_id, full_name, email, job_title, status, created_at FROM applications WHERE shortlisted = 1 ORDER BY created_at DESC");
+$result = $conn->query("
+    SELECT a.id, a.candidate_id, a.full_name, a.email, a.job_title, a.status, a.created_at, v.department
+    FROM applications a
+    LEFT JOIN vacancies v ON v.title = a.job_title
+    WHERE a.shortlisted = 1
+    ORDER BY a.created_at DESC
+");
 if ($result) {
     while ($row = $result->fetch_assoc()) {
         $row['id'] = (int) $row['id'];
