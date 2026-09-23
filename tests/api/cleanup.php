@@ -59,4 +59,6 @@ $conn->query("DELETE FROM password_resets WHERE email LIKE '$domain'");
 $conn->query("DELETE FROM interview_feedback WHERE comments LIKE '%[qa-test]%'");
 $deletedVacancies = $conn->query("DELETE FROM vacancies WHERE title LIKE 'QA-E2E-Vacancy-%'") ? $conn->affected_rows : 0;
 
+$conn->query("DELETE FROM cv_screening_presets WHERE name LIKE 'QA-E2E-Preset-%'");
+
 echo "Cleanup complete: removed $totalUsers QA account(s), $deletedApplications QA application(s), and $deletedVacancies QA vacancy(ies).\n";

@@ -2317,6 +2317,7 @@ const CVS_SYNONYMS = {
 
 let cvsVacancies = [];
 let cvsResults = [];
+let cvsPresets = [];
 let cvsThreshold = 60;
 
 function openCvScreeningModal() {
@@ -2353,6 +2354,17 @@ function renderCvScreeningModal() {
               </select>
             </div>
             <div class="form-group" style="grid-column: span 2;">
+              <label>Saved Criteria</label>
+              <div class="cvs-preset-row">
+                <select id="cvs-preset-select" onchange="applyCvsPreset()">
+                  <option value="">Load saved criteria...</option>
+                </select>
+                <button type="button" class="cvs-preset-delete-btn" id="cvs-preset-delete-btn" onclick="deleteCvsPreset()" title="Delete this saved criteria" disabled>
+                  <i data-lucide="trash-2"></i>
+                </button>
+              </div>
+            </div>
+            <div class="form-group" style="grid-column: span 2;">
               <label>Must-Have Skills</label>
               <input type="text" id="cvs-must" placeholder="e.g. React, JavaScript, REST API">
               <p class="cvs-hint">Comma-separated. Auto-filled from the vacancy's requirements — edit freely.</p>
@@ -2364,6 +2376,15 @@ function renderCvScreeningModal() {
             <div class="form-group">
               <label>Minimum Years of Experience</label>
               <input type="number" id="cvs-years" min="0" placeholder="e.g. 2">
+            </div>
+            <div class="form-group" style="grid-column: span 2;">
+              <div class="cvs-preset-save-row">
+                <input type="text" id="cvs-preset-name" maxlength="100" placeholder="Name these criteria, e.g. Senior Frontend">
+                <button type="button" class="cvs-preset-save-btn" onclick="saveCvsPreset()">
+                  <i data-lucide="save"></i> Save Criteria
+                </button>
+              </div>
+              <p class="cvs-hint">Saved criteria are shared with all HR and can be reloaded any time. Saving under an existing name updates it.</p>
             </div>
           </div>
 
@@ -2398,6 +2419,95 @@ function renderCvScreeningModal() {
 
   document.getElementById('modal-root').innerHTML = modalHtml;
   lucide.createIcons();
+  loadCvsPresets();
+}
+
+function loadCvsPresets(selectId) {
+  return fetch('../api/get_cv_presets.php')
+    .then(response => response.json())
+    .then(result => {
+      cvsPresets = result.success ? result.data : [];
+      const select = document.getElementById('cvs-preset-select');
+      if (!select) return;
+      select.innerHTML = '<option value="">Load saved criteria...</option>';
+      cvsPresets.forEach(p => {
+        const opt = document.createElement('option');
+        opt.value = p.id;
+        opt.textContent = p.name;
+        select.appendChild(opt);
+      });
+      if (selectId) select.value = String(selectId);
+      document.getElementById('cvs-preset-delete-btn').disabled = !select.value;
+    })
+    .catch(error => console.error('Error loading saved criteria:', error));
+}
+
+function applyCvsPreset() {
+  const select = document.getElementById('cvs-preset-select');
+  const preset = cvsPresets.find(p => String(p.id) === select.value);
+  document.getElementById('cvs-preset-delete-btn').disabled = !preset;
+  if (!preset) return;
+  document.getElementById('cvs-must').value = preset.must_skills;
+  document.getElementById('cvs-nice').value = preset.nice_skills;
+  document.getElementById('cvs-years').value = preset.min_years > 0 ? preset.min_years : '';
+  document.getElementById('cvs-preset-name').value = preset.name;
+}
+
+function saveCvsPreset() {
+  const name = document.getElementById('cvs-preset-name').value.trim();
+  const must = document.getElementById('cvs-must').value.trim();
+  const nice = document.getElementById('cvs-nice').value.trim();
+  const years = parseInt(document.getElementById('cvs-years').value, 10) || 0;
+
+  if (!name) {
+    alert('Give these criteria a name first.');
+    return;
+  }
+  if (!must && !nice) {
+    alert('Add at least one must-have or nice-to-have skill before saving.');
+    return;
+  }
+
+  fetch('../api/save_cv_preset.php', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ name, must_skills: must, nice_skills: nice, min_years: years })
+  })
+    .then(response => response.json())
+    .then(result => {
+      if (!result.success) {
+        alert(result.message || 'Could not save the criteria.');
+        return;
+      }
+      loadCvsPresets(result.id);
+    })
+    .catch(error => {
+      console.error('Error saving criteria:', error);
+      alert('Could not save the criteria.');
+    });
+}
+
+function deleteCvsPreset() {
+  const select = document.getElementById('cvs-preset-select');
+  const preset = cvsPresets.find(p => String(p.id) === select.value);
+  if (!preset) return;
+  if (!confirm(`Delete the saved criteria "${preset.name}"?`)) return;
+
+  fetch('../api/delete_cv_preset.php', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ id: preset.id })
+  })
+    .then(response => response.json())
+    .then(result => {
+      if (!result.success) {
+        alert(result.message || 'Could not delete the criteria.');
+        return;
+      }
+      document.getElementById('cvs-preset-name').value = '';
+      loadCvsPresets();
+    })
+    .catch(error => console.error('Error deleting criteria:', error));
 }
 
 function closeCvScreeningModal() {
@@ -2407,7 +2517,11 @@ function closeCvScreeningModal() {
 function onCvsVacancyChange() {
   const select = document.getElementById('cvs-vacancy-select');
   const vacancy = cvsVacancies.find(v => String(v.id) === select.value);
-  document.getElementById('cvs-must').value = vacancy ? (vacancy.requirements || '') : '';
+  // Saved criteria the user loaded on purpose win over the vacancy's own requirements.
+  const presetLoaded = document.getElementById('cvs-preset-select').value !== '';
+  if (!presetLoaded) {
+    document.getElementById('cvs-must').value = vacancy ? (vacancy.requirements || '') : '';
+  }
   document.getElementById('cvs-run-btn').disabled = !vacancy;
 }
 

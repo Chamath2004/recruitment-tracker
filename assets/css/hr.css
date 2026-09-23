@@ -1479,6 +1479,77 @@
   margin-top: 4px;
 }
 
+.cvs-preset-row,
+.cvs-preset-save-row {
+  display: flex;
+  gap: 8px;
+  align-items: stretch;
+}
+
+.cvs-preset-row select,
+.cvs-preset-save-row input {
+  flex: 1;
+  min-width: 0;
+}
+
+.cvs-preset-save-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  white-space: nowrap;
+  background-color: transparent;
+  color: var(--primary-green);
+  border: 1px solid var(--primary-green);
+  border-radius: 8px;
+  padding: 0 14px;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.cvs-preset-save-btn:hover {
+  background-color: var(--primary-green);
+  color: white;
+}
+
+.cvs-preset-delete-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  background-color: transparent;
+  color: var(--text-dim);
+  border: 1px solid var(--border-color, rgba(128, 128, 128, 0.35));
+  border-radius: 8px;
+  cursor: pointer;
+}
+
+.cvs-preset-delete-btn:hover:not(:disabled) {
+  color: #e5484d;
+  border-color: #e5484d;
+}
+
+.cvs-preset-delete-btn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.cvs-preset-save-btn svg,
+.cvs-preset-delete-btn svg {
+  width: 16px;
+  height: 16px;
+}
+
+@media (max-width: 600px) {
+  .cvs-preset-save-row {
+    flex-direction: column;
+  }
+  .cvs-preset-save-btn {
+    justify-content: center;
+    padding: 10px 14px;
+  }
+}
+
 .cvs-run-btn {
   background-color: var(--primary-green);
   color: white;
