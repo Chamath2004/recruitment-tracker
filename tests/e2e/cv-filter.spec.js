@@ -53,7 +53,9 @@ test('HR can run CV auto-screening for a vacancy and shortlist a candidate from 
   await page.getByRole('button', { name: 'Auto Filter CVs' }).click();
 
   await page.selectOption('#cvs-vacancy-select', String(vacancyId));
-  await expect(page.locator('#cvs-must')).toHaveValue('JavaScript, PHP');
+  // Must-Have Skills are no longer pulled from the vacancy: the field stays empty until HR fills it.
+  await expect(page.locator('#cvs-must')).toHaveValue('');
+  await page.fill('#cvs-must', 'JavaScript, PHP');
 
   await page.getByRole('button', { name: /Run Screening/ }).click();
 

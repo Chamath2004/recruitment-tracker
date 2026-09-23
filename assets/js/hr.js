@@ -2367,7 +2367,7 @@ function renderCvScreeningModal() {
             <div class="form-group" style="grid-column: span 2;">
               <label>Must-Have Skills</label>
               <input type="text" id="cvs-must" placeholder="e.g. React, JavaScript, REST API">
-              <p class="cvs-hint">Comma-separated. Auto-filled from the vacancy's requirements — edit freely.</p>
+              <p class="cvs-hint">Comma-separated. Type the skills a candidate must have, or load a saved set above.</p>
             </div>
             <div class="form-group">
               <label>Nice-to-Have Skills</label>
@@ -2517,11 +2517,7 @@ function closeCvScreeningModal() {
 function onCvsVacancyChange() {
   const select = document.getElementById('cvs-vacancy-select');
   const vacancy = cvsVacancies.find(v => String(v.id) === select.value);
-  // Saved criteria the user loaded on purpose win over the vacancy's own requirements.
-  const presetLoaded = document.getElementById('cvs-preset-select').value !== '';
-  if (!presetLoaded) {
-    document.getElementById('cvs-must').value = vacancy ? (vacancy.requirements || '') : '';
-  }
+  // Skills are entered by HR (or loaded from Saved Criteria), never pulled from the vacancy.
   document.getElementById('cvs-run-btn').disabled = !vacancy;
 }
 
