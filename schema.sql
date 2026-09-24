@@ -181,13 +181,15 @@ DROP TABLE IF EXISTS `notifications`;
 /*!40101 SET character_set_client = utf8 */;
 CREATE TABLE `notifications` (
   `id` int(11) NOT NULL AUTO_INCREMENT,
-  `candidate_id` int(11) NOT NULL,
+  `candidate_id` int(11) DEFAULT NULL,
+  `hiring_manager_id` int(11) DEFAULT NULL,
   `message` varchar(500) NOT NULL,
   `type` enum('info','success','warning','reminder') NOT NULL DEFAULT 'info',
   `is_read` tinyint(1) NOT NULL DEFAULT 0,
   `created_at` timestamp NOT NULL DEFAULT current_timestamp(),
   PRIMARY KEY (`id`),
-  KEY `idx_candidate_id` (`candidate_id`)
+  KEY `idx_candidate_id` (`candidate_id`),
+  KEY `idx_hiring_manager_id` (`hiring_manager_id`)
 ) ENGINE=InnoDB AUTO_INCREMENT=112 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 DROP TABLE IF EXISTS `password_resets`;

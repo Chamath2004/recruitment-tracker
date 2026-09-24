@@ -44,6 +44,11 @@ $description = "Interview scheduled via Altrium recruitment tracker.";
 
 $result = googleCreateMeetEvent($accessToken, $summary, $description, $date, $time, $duration);
 
+if (!empty($result['needs_reconnect'])) {
+    // The stored connection can never work, so forget it and let HR reconnect properly.
+    googleClearStoredTokens($conn, $adminId);
+}
+
 echo json_encode($result);
 
 $conn->close();

@@ -850,6 +850,8 @@ function disconnectGoogleCalendar() {
     switchHrView(document.getElementById('nav-interviews'), 'interviews', 'Interview Setup');
   } else if (status === 'error') {
     alert('Could not connect Google Calendar. Please try again.');
+  } else if (status === 'noscope') {
+    alert('Google Calendar was not connected: calendar permission was not granted.\n\nClick Connect Google Calendar again and, on Google\'s screen, tick "See, create, and delete events on all calendars" before pressing Continue.');
   }
 
   params.delete('google');
@@ -1219,9 +1221,10 @@ function autoFillMeetingLink(force) {
           if (force && confirm('Connect your Google Calendar to generate Meet links. Connect now?')) {
             window.location.href = '../api/google_oauth_start.php';
           }
-        } else if (force) {
+        } else if (force || result.needs_reconnect) {
           alert(result.message || 'Failed to generate the Meet link.');
         }
+        if (result.needs_reconnect) loadGoogleStatus();
         return;
       }
       linkEl.value = result.meet_link;

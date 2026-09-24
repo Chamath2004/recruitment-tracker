@@ -22,6 +22,20 @@ if ($tokenResult['http_code'] !== 200 || empty($tokenResult['body']['access_toke
 }
 
 $accessToken = $tokenResult['body']['access_token'];
+
+if (!googleGrantedCalendarScope($tokenResult['body']['scope'] ?? '')) {
+    // Signed in, but the Calendar tick box was left off. Saving this would report
+    // "connected" while every Meet link fails, so drop the grant and any old token.
+    googleCurlRequest("https://oauth2.googleapis.com/revoke?token=" . urlencode($accessToken), "POST");
+    require_once __DIR__ . '/db.php';
+    if (!$conn->connect_error) {
+        googleClearStoredTokens($conn, $adminId);
+        $conn->close();
+    }
+    header("Location: ../pages/HR.html?google=noscope#interviews");
+    exit();
+}
+
 $refreshToken = $tokenResult['body']['refresh_token'] ?? null;
 $expiresAt = date("Y-m-d H:i:s", time() + (int) ($tokenResult['body']['expires_in'] ?? 3600));
 

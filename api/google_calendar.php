@@ -51,6 +51,23 @@ function googleExchangeCode($code)
     ]);
 }
 
+// True when Google actually granted the Calendar permission. Google's consent screen
+// shows each permission as its own tick box, so a user can approve the sign-in
+// but leave Calendar unticked, which yields a token that cannot create events.
+function googleGrantedCalendarScope($scopeString)
+{
+    return strpos((string) $scopeString, "https://www.googleapis.com/auth/calendar") !== false;
+}
+
+// Forgets this admin's Google tokens (used when the stored ones are unusable).
+function googleClearStoredTokens($conn, $adminId)
+{
+    $clear = $conn->prepare("UPDATE hr_admins SET google_refresh_token = NULL, google_access_token = NULL, google_token_expires_at = NULL, google_account_email = NULL WHERE id = ?");
+    $clear->bind_param("i", $adminId);
+    $clear->execute();
+    $clear->close();
+}
+
 // Returns a valid access token for the given HR admin, refreshing it if needed.
 // Returns null if the admin hasn't connected a Google account.
 function googleGetValidAccessToken($conn, $adminId)
@@ -131,6 +148,15 @@ function googleCreateMeetEvent($accessToken, $summary, $description, $date, $tim
     }
 
     $message = $result['body']['error']['message'] ?? ($result['error'] ?: "Failed to create the calendar event.");
+
+    if ($result['http_code'] === 403 && stripos($message, "insufficient authentication scopes") !== false) {
+        return [
+            "success" => false,
+            "needs_reconnect" => true,
+            "message" => "Google Calendar was connected without calendar permission. Click Connect Google Calendar again and, on Google's screen, tick \"See, create, and delete events on all calendars\" before pressing Continue.",
+        ];
+    }
+
     return ["success" => false, "message" => $message];
 }
 ?>

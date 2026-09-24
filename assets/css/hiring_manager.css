@@ -12,11 +12,43 @@
 }
 
 /* ================= KANBAN BOARD ================= */
+/* .main-content is a flex child, so by default it grows to fit its widest content and
+   pushes the right-hand columns (e.g. Rejected) off-screen. Letting it shrink makes the
+   board scroll sideways inside itself instead. */
+.main-content {
+  min-width: 0;
+}
+
 .kanban-board {
   display: flex;
   gap: 16px;
-  overflow-x: auto;
-  padding-bottom: 8px;
+  overflow: auto;
+  /* Cap the height so the horizontal scroll bar always sits inside the visible screen
+     rather than at the bottom of a long page. */
+  max-height: calc(100vh - 170px);
+  padding-bottom: 12px;
+  scrollbar-width: auto;
+  scrollbar-color: var(--text-dim) var(--hover-bg-card);
+}
+
+.kanban-board::-webkit-scrollbar {
+  height: 12px;
+  width: 12px;
+}
+
+.kanban-board::-webkit-scrollbar-track {
+  background: var(--hover-bg-card);
+  border-radius: 8px;
+}
+
+.kanban-board::-webkit-scrollbar-thumb {
+  background: var(--text-dim);
+  border-radius: 8px;
+  border: 2px solid var(--hover-bg-card);
+}
+
+.kanban-board::-webkit-scrollbar-thumb:hover {
+  background: var(--text-muted);
 }
 
 .kanban-column {

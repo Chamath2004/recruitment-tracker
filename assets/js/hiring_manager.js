@@ -485,7 +485,8 @@ collapseBtn.addEventListener('click', () => {
 // ================= NOTIFICATIONS =================
 
 function timeAgo(mysqlDatetime) {
-  const then = new Date(mysqlDatetime.replace(" ", "T"));
+  // Database times are Sri Lanka time (see api/db.php); say so, or the browser guesses its own zone.
+  const then = new Date(mysqlDatetime.replace(" ", "T") + "+05:30");
   const diffSec = Math.floor((Date.now() - then.getTime()) / 1000);
 
   if (diffSec < 60) return "Just now";
